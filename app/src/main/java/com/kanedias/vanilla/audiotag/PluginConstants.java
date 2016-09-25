@@ -38,13 +38,14 @@ public class PluginConstants {
     // this is passed to plugin when it is selected by user
     static final String EXTRA_PARAM_FILE_PATH = "ch.blinkenlights.android.vanilla.extra.FILE_PATH";
 
-    // this is plugin-to-plugin extras
+    // plugin-to-plugin extras (pass EXTRA_PARAM_PLUGIN_APP too to know whom to answer)
     static final String EXTRA_PARAM_P2P = "ch.blinkenlights.android.vanilla.extra.P2P"; // marker
     static final String EXTRA_PARAM_P2P_KEY = "ch.blinkenlights.android.vanilla.extra.P2P_KEY";
     static final String EXTRA_PARAM_P2P_VAL = "ch.blinkenlights.android.vanilla.extra.P2P_VALUE";
 
-    static final String P2P_WRITE_LYRICS = "WRITE_LYRICS";
-    static final String P2P_READ_LYRICS = "READ_LYRICS";
+    // related to tag editor
+    static final String P2P_WRITE_TAG = "WRITE_TAG";
+    static final String P2P_READ_TAG = "READ_TAG";
 
     static final String LOG_TAG = "Vanilla:TagEditorPlugin";
 

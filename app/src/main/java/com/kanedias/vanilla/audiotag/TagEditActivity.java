@@ -17,9 +17,13 @@
 package com.kanedias.vanilla.audiotag;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.media.MediaScannerConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -34,25 +38,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
-import android.widget.Toast;
 
 import com.kanedias.vanilla.audiotag.misc.HintSpinnerAdapter;
 
-import org.jaudiotagger.audio.AudioFile;
-import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.audio.exceptions.CannotWriteException;
-import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
-import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.TagException;
-
-import java.io.File;
-import java.io.IOException;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static com.kanedias.vanilla.audiotag.PluginConstants.*;
 
 /**
  * Main activity of Tag Editor plugin. This will be presented as a dialog to the user
@@ -75,8 +69,27 @@ public class TagEditActivity extends Activity {
     private EditText mCustomTagEdit;
     private Button mConfirm, mCancel;
 
-    private AudioFile mAudioFile;
+    private PluginService mService;
     private Tag mTag;
+
+    private ServiceConnection mServiceConn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            if (service == null) { // couldn't load file
+                finish();
+                return;
+            }
+
+            mService = ((PluginService.PluginBinder) service).getService();
+            mTag = mService.getTag();
+            fillInitialValues();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +107,14 @@ public class TagEditActivity extends Activity {
         setupUI();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mService != null) {
+            unbindService(mServiceConn);
+        }
+    }
+
     /**
      * Initialize UI elements with handlers and action listeners
      */
@@ -108,7 +129,8 @@ public class TagEditActivity extends Activity {
         mConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                persistAndQuit();
+                mService.persistChanges();
+                finish();
             }
         });
 
@@ -145,89 +167,6 @@ public class TagEditActivity extends Activity {
     }
 
     /**
-     * Writes changes in tags into file and closes activity.
-     * If something goes wrong, leaves activity intact.
-     */
-    private void persistAndQuit() {
-        try {
-            AudioFileIO.write(mAudioFile);
-            Toast.makeText(TagEditActivity.this, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
-
-            // update media database
-            MediaScannerConnection.scanFile(TagEditActivity.this,
-                    new String[]{mAudioFile.getFile().getAbsolutePath()},
-                    null,
-                    null);
-            finish();
-        } catch (CannotWriteException e) {
-            Log.e(PluginConstants.LOG_TAG,
-                    String.format(getString(R.string.error_audio_file), mAudioFile.getFile().getPath()), e);
-            Toast.makeText(TagEditActivity.this,
-                    String.format(getString(R.string.error_audio_file) + ", %s",
-                        mAudioFile.getFile().getPath(),
-                        e.getLocalizedMessage()),
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /**
-     * Handles P2P intents.
-     *
-     * When this method is fired we still don't see the activity window
-     * this makes it perfect place to perform P2P and exit seamlessly.
-     *
-     * Can't do that in service because permission request still requires
-     * initialized activity.
-     */
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (!checkAndRequestPermissions(WRITE_EXTERNAL_STORAGE)) {
-            return; // no permissions, proceed to onResume (see note there)
-        }
-
-        if (!getIntent().hasExtra(PluginConstants.EXTRA_PARAM_P2P)) {
-            return; // not p2p intent, proceed
-        }
-
-        if (!loadFile()) {
-            finish(); // couldn't load file, exiting
-            return;
-        }
-
-        handleP2pIntent();
-    }
-
-    private void handleP2pIntent() {
-        String request = getIntent().getStringExtra(PluginConstants.EXTRA_PARAM_P2P);
-        switch (request) {
-            case PluginConstants.P2P_WRITE_LYRICS:
-                String[] fields = getIntent().getStringArrayExtra(PluginConstants.EXTRA_PARAM_P2P_KEY);
-                String[] values = getIntent().getStringArrayExtra(PluginConstants.EXTRA_PARAM_P2P_VAL);
-                for (int i = 0; i < fields.length; ++i) {
-                    try {
-                        FieldKey key = FieldKey.valueOf(fields[i]);
-                        mTag.setField(key, values[i]);
-                    } catch (IllegalArgumentException iae) {
-                        Log.e(PluginConstants.LOG_TAG, "Invalid tag requested: " + fields[i], iae);
-                        Toast.makeText(this, R.string.invalid_tag_requested, Toast.LENGTH_SHORT).show();
-                    } catch (FieldDataInvalidException e) {
-                        // should not happen
-                        Log.e(PluginConstants.LOG_TAG, "Error writing tag", e);
-                    }
-                }
-                persistAndQuit();
-                break;
-            case PluginConstants.P2P_READ_LYRICS:
-
-                finish();
-                break;
-        }
-
-    }
-
-    /**
      * Handle Vanilla Music player intents. This will show activity window and load
      * all needed info from file.
      */
@@ -240,65 +179,26 @@ public class TagEditActivity extends Activity {
             return;
         }
 
-        if (!loadFile()) {
-            finish(); // couldn't load file, exiting
-            return;
-        }
-
-        if (getIntent().hasExtra(PluginConstants.EXTRA_PARAM_P2P)) {
-            /**
-             * Normally we won't get here. But if user installed tag editor and sent p2p request before
-             * the first launch, we'll request permissions in {@link #onStart()} and will be able to handle it
-             * only here as {@link #onStart()} won't fire again. So this check should also be present here.
-             */
-            handleP2pIntent();
+        if (getIntent().hasExtra(EXTRA_PARAM_P2P)) {
+            Intent serviceStart = new Intent(this, PluginService.class);
+            serviceStart.setAction(ACTION_LAUNCH_PLUGIN);
+            serviceStart.putExtras(getIntent());
+            startService(serviceStart); // pass intent back to the service
+            finish();
         } else {
-            fillInitialValues();
+            // we'll need service at hand while editing
+            Intent bind = new Intent(this, PluginService.class);
+            bindService(bind, mServiceConn, 0);
         }
     }
 
     /**
-     * Fills UI with initial values from loaded file. At this point both {@link #mAudioFile}
-     * and {@link #mTag} must be initialized.
+     * Fills UI with initial values from loaded file. At this point {@link #mTag} must be initialized.
      */
     private void fillInitialValues() {
         mTitleEdit.setText(mTag.getFirst(FieldKey.TITLE));
         mArtistEdit.setText(mTag.getFirst(FieldKey.ARTIST));
         mAlbumEdit.setText(mTag.getFirst(FieldKey.ALBUM));
-    }
-
-    /**
-     * Loads file as {@link AudioFile} and performs initial tag creation if it's absent.
-     * If error happens while loading, shows popup indicating error details.
-     * @return true if and only if file was successfully read and initialized in tag system, false otherwise
-     */
-    private boolean loadFile() {
-        // we need only path passed to us
-        String filePath = getIntent().getStringExtra(PluginConstants.EXTRA_PARAM_FILE_PATH);
-        if (TextUtils.isEmpty(filePath)) {
-            return false;
-        }
-
-        File file = new File(filePath);
-        if (!file.exists()) {
-            return false;
-        }
-
-        try {
-            mAudioFile = AudioFileIO.read(file);
-            mTag = mAudioFile.getTagOrCreateAndSetDefault();
-        } catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
-            Log.e(PluginConstants.LOG_TAG,
-                    String.format(getString(R.string.error_audio_file), filePath), e);
-            Toast.makeText(this,
-                    String.format(getString(R.string.error_audio_file) + ", %s",
-                            filePath,
-                            e.getLocalizedMessage()),
-                    Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -365,7 +265,7 @@ public class TagEditActivity extends Activity {
                 mTag.setField(key, s.toString());
             } catch (FieldDataInvalidException e) {
                 // should not happen
-                Log.e(PluginConstants.LOG_TAG, "Error writing tag", e);
+                Log.e(LOG_TAG, "Error writing tag", e);
             }
         }
     }
