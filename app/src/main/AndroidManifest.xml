@@ -26,8 +26,10 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".TagEditActivity" android:theme="@android:style/Theme.DeviceDefault.Dialog">
-        </activity>
+        <activity
+            android:name=".TagEditActivity"
+            android:theme="@android:style/Theme.DeviceDefault.Dialog"
+            android:excludeFromRecents="true"/>
     </application>
 
 </manifest>

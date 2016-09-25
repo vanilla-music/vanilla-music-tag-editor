@@ -108,25 +108,7 @@ public class TagEditActivity extends Activity {
         mConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    AudioFileIO.write(mAudioFile);
-                    Toast.makeText(TagEditActivity.this, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
-
-                    // update media database
-                    MediaScannerConnection.scanFile(TagEditActivity.this,
-                            new String[]{mAudioFile.getFile().getAbsolutePath()},
-                            null,
-                            null);
-                    finish();
-                } catch (CannotWriteException e) {
-                    Log.e(PluginConstants.LOG_TAG,
-                            String.format(getString(R.string.error_audio_file), mAudioFile.getFile().getPath()), e);
-                    Toast.makeText(TagEditActivity.this,
-                            String.format(getString(R.string.error_audio_file) + ", details: %s",
-                                mAudioFile.getFile().getPath(),
-                                e.getLocalizedMessage()),
-                            Toast.LENGTH_SHORT).show();
-                }
+                persistAndQuit();
             }
         });
 
@@ -162,17 +144,116 @@ public class TagEditActivity extends Activity {
         mAlbumEdit.addTextChangedListener(new FieldKeyListener(FieldKey.ALBUM));
     }
 
+    /**
+     * Writes changes in tags into file and closes activity.
+     * If something goes wrong, leaves activity intact.
+     */
+    private void persistAndQuit() {
+        try {
+            AudioFileIO.write(mAudioFile);
+            Toast.makeText(TagEditActivity.this, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
+
+            // update media database
+            MediaScannerConnection.scanFile(TagEditActivity.this,
+                    new String[]{mAudioFile.getFile().getAbsolutePath()},
+                    null,
+                    null);
+            finish();
+        } catch (CannotWriteException e) {
+            Log.e(PluginConstants.LOG_TAG,
+                    String.format(getString(R.string.error_audio_file), mAudioFile.getFile().getPath()), e);
+            Toast.makeText(TagEditActivity.this,
+                    String.format(getString(R.string.error_audio_file) + ", %s",
+                        mAudioFile.getFile().getPath(),
+                        e.getLocalizedMessage()),
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Handles P2P intents.
+     *
+     * When this method is fired we still don't see the activity window
+     * this makes it perfect place to perform P2P and exit seamlessly.
+     *
+     * Can't do that in service because permission request still requires
+     * initialized activity.
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (!checkAndRequestPermissions(WRITE_EXTERNAL_STORAGE)) {
+            return; // no permissions, proceed to onResume (see note there)
+        }
+
+        if (!getIntent().hasExtra(PluginConstants.EXTRA_PARAM_P2P)) {
+            return; // not p2p intent, proceed
+        }
+
+        if (!loadFile()) {
+            finish(); // couldn't load file, exiting
+            return;
+        }
+
+        handleP2pIntent();
+    }
+
+    private void handleP2pIntent() {
+        String request = getIntent().getStringExtra(PluginConstants.EXTRA_PARAM_P2P);
+        switch (request) {
+            case PluginConstants.P2P_WRITE_LYRICS:
+                String[] fields = getIntent().getStringArrayExtra(PluginConstants.EXTRA_PARAM_P2P_KEY);
+                String[] values = getIntent().getStringArrayExtra(PluginConstants.EXTRA_PARAM_P2P_VAL);
+                for (int i = 0; i < fields.length; ++i) {
+                    try {
+                        FieldKey key = FieldKey.valueOf(fields[i]);
+                        mTag.setField(key, values[i]);
+                    } catch (IllegalArgumentException iae) {
+                        Log.e(PluginConstants.LOG_TAG, "Invalid tag requested: " + fields[i], iae);
+                        Toast.makeText(this, R.string.invalid_tag_requested, Toast.LENGTH_SHORT).show();
+                    } catch (FieldDataInvalidException e) {
+                        // should not happen
+                        Log.e(PluginConstants.LOG_TAG, "Error writing tag", e);
+                    }
+                }
+                persistAndQuit();
+                break;
+            case PluginConstants.P2P_READ_LYRICS:
+
+                finish();
+                break;
+        }
+
+    }
+
+    /**
+     * Handle Vanilla Music player intents. This will show activity window and load
+     * all needed info from file.
+     */
     @Override
     protected void onResume() {
         super.onResume();
 
         // onResume will fire both on first launch and on return from permission request
-        if (checkAndRequestPermissions(WRITE_EXTERNAL_STORAGE)) {
-            if (loadFile()) {
-                fillInitialValues();
-            } else {
-                finish(); // couldn't load file, exiting
-            }
+        if (!checkAndRequestPermissions(WRITE_EXTERNAL_STORAGE)) {
+            return;
+        }
+
+        if (!loadFile()) {
+            finish(); // couldn't load file, exiting
+            return;
+        }
+
+        if (getIntent().hasExtra(PluginConstants.EXTRA_PARAM_P2P)) {
+            /**
+             * Normally we won't get here. But if user installed tag editor and sent p2p request before
+             * the first launch, we'll request permissions in {@link #onStart()} and will be able to handle it
+             * only here as {@link #onStart()} won't fire again. So this check should also be present here.
+             */
+            handleP2pIntent();
+        } else {
+            fillInitialValues();
         }
     }
 
@@ -210,7 +291,7 @@ public class TagEditActivity extends Activity {
             Log.e(PluginConstants.LOG_TAG,
                     String.format(getString(R.string.error_audio_file), filePath), e);
             Toast.makeText(this,
-                    String.format(getString(R.string.error_audio_file) + ", details: %s",
+                    String.format(getString(R.string.error_audio_file) + ", %s",
                             filePath,
                             e.getLocalizedMessage()),
                     Toast.LENGTH_SHORT).show();
@@ -283,6 +364,7 @@ public class TagEditActivity extends Activity {
             try {
                 mTag.setField(key, s.toString());
             } catch (FieldDataInvalidException e) {
+                // should not happen
                 Log.e(PluginConstants.LOG_TAG, "Error writing tag", e);
             }
         }

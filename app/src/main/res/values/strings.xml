@@ -9,4 +9,5 @@
     <string name="select_custom_tag">Select custom tag…</string>
     <string name="error_audio_file">Error while working with audio file %s</string>
     <string name="file_written_successfully">File written successfully!</string>
+    <string name="invalid_tag_requested">Invalid tag requested</string>
 </resources>
