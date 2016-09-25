@@ -192,6 +192,7 @@ public class TagEditActivity extends Activity {
      * @return true if and only if file was successfully read and initialized in tag system, false otherwise
      */
     private boolean loadFile() {
+        // we need only path passed to us
         String filePath = getIntent().getStringExtra(PluginConstants.EXTRA_PARAM_FILE_PATH);
         if (TextUtils.isEmpty(filePath)) {
             return false;

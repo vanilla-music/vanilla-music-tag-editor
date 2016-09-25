@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">VM Tag Editor Plugin</string>
+    <string name="app_name">Vanilla Tag Editor</string>
     <string name="tag_editor">Tag editor</string>
     <string name="plugin_desc">Allows you to edit embedded tags of an MP3/OGG/FLAC files</string>
     <string name="song_title">Song title</string>
