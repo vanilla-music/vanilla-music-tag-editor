@@ -13,8 +13,8 @@
             android:name=".PluginService"
             android:enabled="true">
             <intent-filter>
-                <action android:name="com.vanilla.action.WAKE_PLUGIN"/>
-                <action android:name="com.vanilla.action.LAUNCH_PLUGIN"/>
+                <action android:name="ch.blinkenlights.android.vanilla.action.WAKE_PLUGIN"/>
+                <action android:name="ch.blinkenlights.android.vanilla.action.LAUNCH_PLUGIN"/>
             </intent-filter>
         </service>
 
@@ -22,7 +22,7 @@
             android:name=".PluginQueryBroadcastReceiver"
             android:enabled="true">
             <intent-filter>
-                <action android:name="com.vanilla.action.REQUEST_PLUGIN_PARAMS"/>
+                <action android:name="ch.blinkenlights.android.vanilla.action.REQUEST_PLUGIN_PARAMS"/>
             </intent-filter>
         </receiver>
 

@@ -25,18 +25,18 @@ public class PluginConstants {
     }
 
     // these actions are for passing between main player and plugins
-    static final String ACTION_REQUEST_PLUGIN_PARAMS = "com.vanilla.action.REQUEST_PLUGIN_PARAMS"; // broadcast
-    static final String ACTION_HANDLE_PLUGIN_PARAMS = "com.vanilla.action.HANDLE_PLUGIN_PARAMS"; // answer
-    static final String ACTION_WAKE_PLUGIN = "com.vanilla.action.WAKE_PLUGIN"; // targeted for each found
-    static final String ACTION_LAUNCH_PLUGIN = "com.vanilla.action.LAUNCH_PLUGIN"; // targeted at selected by user
+    static final String ACTION_REQUEST_PLUGIN_PARAMS = "ch.blinkenlights.android.vanilla.action.REQUEST_PLUGIN_PARAMS"; // broadcast
+    static final String ACTION_HANDLE_PLUGIN_PARAMS = "ch.blinkenlights.android.vanilla.action.HANDLE_PLUGIN_PARAMS"; // answer
+    static final String ACTION_WAKE_PLUGIN = "ch.blinkenlights.android.vanilla.action.WAKE_PLUGIN"; // targeted for each found
+    static final String ACTION_LAUNCH_PLUGIN = "ch.blinkenlights.android.vanilla.action.LAUNCH_PLUGIN"; // targeted at selected by user
 
     // these are used by plugins to describe themselves
-    static final String EXTRA_PARAM_PLUGIN_NAME = "com.vanilla.extra.PLUGIN_NAME";
-    static final String EXTRA_PARAM_PLUGIN_APP = "com.vanilla.extra.PLUGIN_APP";
-    static final String EXTRA_PARAM_PLUGIN_DESC = "com.vanilla.extra.PLUGIN_DESC";
+    static final String EXTRA_PARAM_PLUGIN_NAME = "ch.blinkenlights.android.vanilla.extra.PLUGIN_NAME";
+    static final String EXTRA_PARAM_PLUGIN_APP = "ch.blinkenlights.android.vanilla.extra.PLUGIN_APP";
+    static final String EXTRA_PARAM_PLUGIN_DESC = "ch.blinkenlights.android.vanilla.extra.PLUGIN_DESC";
 
     // this is passed to plugin when it is selected by user
-    static final String EXTRA_PARAM_FILE_PATH = "com.vanilla.extra.FILE_PATH";
+    static final String EXTRA_PARAM_FILE_PATH = "ch.blinkenlights.android.vanilla.extra.FILE_PATH";
 
     static final String LOG_TAG = "Vanilla:TagEditorPlugin";
 
