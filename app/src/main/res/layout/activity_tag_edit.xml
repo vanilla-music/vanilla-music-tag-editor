@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/activity_tag_edit"
         android:layout_margin="16dp"
-        tools:context="com.kanedias.vanilla.TagEditActivity">
+        tools:context=".TagEditActivity">
 
         <EditText
             android:layout_width="match_parent"

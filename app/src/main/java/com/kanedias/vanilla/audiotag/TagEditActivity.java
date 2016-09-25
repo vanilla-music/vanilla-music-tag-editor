@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.kanedias.vanilla;
+package com.kanedias.vanilla.audiotag;
 
 import android.app.Activity;
 import android.content.pm.PackageManager;
@@ -36,7 +36,7 @@ import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
-import com.kanedias.vanilla.misc.HintSpinnerAdapter;
+import com.kanedias.vanilla.audiotag.misc.HintSpinnerAdapter;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;

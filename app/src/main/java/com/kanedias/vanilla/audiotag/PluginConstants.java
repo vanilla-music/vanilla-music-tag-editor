@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.kanedias.vanilla;
+package com.kanedias.vanilla.audiotag;
 
 /**
  * This class constants should be synchronized with VanillaMusic <code>PluginUtils</code> class

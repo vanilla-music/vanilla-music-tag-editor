@@ -5,7 +5,7 @@ android {
     buildToolsVersion "24.0.2"
 
     defaultConfig {
-        applicationId "com.kanedias.vanilla"
+        applicationId "com.kanedias.vanilla.audiotag"
         minSdkVersion 14
         targetSdkVersion 24
         versionCode 1

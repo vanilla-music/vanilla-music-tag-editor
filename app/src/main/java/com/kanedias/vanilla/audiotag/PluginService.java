@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.kanedias.vanilla;
+package com.kanedias.vanilla.audiotag;
 
 import android.app.IntentService;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.util.Log;
 
-import static com.kanedias.vanilla.PluginConstants.*;
+import static com.kanedias.vanilla.audiotag.PluginConstants.*;
 
 /**
  * Main service of Plugin system.

@@ -1,4 +1,4 @@
-package com.kanedias.vanilla.misc;
+package com.kanedias.vanilla.audiotag.misc;
 
 import android.content.Context;
 import android.database.DataSetObserver;
