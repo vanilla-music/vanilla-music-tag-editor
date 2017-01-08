@@ -21,7 +21,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -167,7 +166,7 @@ public class TagEditActivity extends Activity {
     }
 
     /**
-     * Handle Vanilla Music player intents. This will show activity window and load
+     * Handle Vanilla Music player intents. This will show activity window (in most cases) and load
      * all needed info from file.
      */
     @Override
@@ -180,12 +179,16 @@ public class TagEditActivity extends Activity {
         }
 
         if (getIntent().hasExtra(EXTRA_PARAM_P2P)) {
+            // if we're here, then user didn't grant tag editor "write to SD" permission before
+            // and service passed P2P intent to activity in hope that it will sort it out.
+            // We need to pass this intent back to service as user had approved permission request
             Intent serviceStart = new Intent(this, PluginService.class);
             serviceStart.setAction(ACTION_LAUNCH_PLUGIN);
             serviceStart.putExtras(getIntent());
             startService(serviceStart); // pass intent back to the service
             finish();
         } else {
+            // it's non-P2P intent, prepare interaction and fire full-blown activity window
             // we'll need service at hand while editing
             Intent bind = new Intent(this, PluginService.class);
             bindService(bind, mServiceConn, 0);

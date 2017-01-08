@@ -80,12 +80,18 @@ public class PluginService extends Service {
     private Tag mTag;
 
     public class PluginBinder extends Binder {
-
         public PluginService getService() {
             return PluginService.this;
         }
     }
 
+    /**
+     * If this is called, then tag edit activity requested bind procedure for this service
+     * Usually service is already started and has file field initialized.
+     *
+     * @param intent intent passed to start this service
+     * @return null if file load failed, plugin binder object otherwise
+     */
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -93,6 +99,18 @@ public class PluginService extends Service {
             return new PluginBinder();
         }
         return null;
+    }
+
+    /**
+     * If this is called, then tag edit activity is finished with its user interaction and
+     * service is safe to be stopped too.
+     */
+    @Override
+    public boolean onUnbind(Intent intent) {
+        // we need to stop this service or ServiceConnection will remain active and onBind won't be called again
+        // activity will see old file loaded in such case!
+        stopSelf();
+        return false;
     }
 
     @Override
@@ -157,9 +175,9 @@ public class PluginService extends Service {
     public boolean loadFile() {
         // we need only path passed to us
         Uri fileUri = mLaunchIntent.getParcelableExtra(EXTRA_PARAM_URI);
-		if (fileUri == null) {
-			return false;
-		}
+        if (fileUri == null) {
+            return false;
+        }
 
         File file = new File(fileUri.getPath());
         if (!file.exists()) {
