@@ -16,18 +16,16 @@
  */
 package com.kanedias.vanilla.audiotag;
 
-import android.app.IntentService;
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -124,11 +122,11 @@ public class PluginService extends Service {
      */
     private void handleRequestPluginParams() {
         Intent answer = new Intent(ACTION_HANDLE_PLUGIN_PARAMS);
-        answer.setComponent(new ComponentName(VANILLA_PACKAGE_NAME, VANILLA_PACKAGE_NAME + VANILLA_SERVICE_NAME));
+        answer.setPackage(VANILLA_PACKAGE_NAME);
         answer.putExtra(EXTRA_PARAM_PLUGIN_NAME, getString(R.string.tag_editor));
         answer.putExtra(EXTRA_PARAM_PLUGIN_APP, getApplicationInfo());
         answer.putExtra(EXTRA_PARAM_PLUGIN_DESC, getString(R.string.plugin_desc));
-        getApplicationContext().startService(answer);
+        sendBroadcast(answer);
     }
 
     private void handleLaunchPlugin() {
@@ -158,12 +156,12 @@ public class PluginService extends Service {
      */
     public boolean loadFile() {
         // we need only path passed to us
-        String filePath = mLaunchIntent.getStringExtra(EXTRA_PARAM_FILE_PATH);
-        if (TextUtils.isEmpty(filePath)) {
-            return false;
-        }
+        Uri fileUri = mLaunchIntent.getParcelableExtra(EXTRA_PARAM_URI);
+		if (fileUri == null) {
+			return false;
+		}
 
-        File file = new File(filePath);
+        File file = new File(fileUri.getPath());
         if (!file.exists()) {
             return false;
         }
@@ -173,10 +171,10 @@ public class PluginService extends Service {
             mTag = mAudioFile.getTagOrCreateAndSetDefault();
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
             Log.e(LOG_TAG,
-                    String.format(getString(R.string.error_audio_file), filePath), e);
+                    String.format(getString(R.string.error_audio_file), fileUri), e);
             Toast.makeText(this,
                     String.format(getString(R.string.error_audio_file) + ", %s",
-                            filePath,
+                            fileUri,
                             e.getLocalizedMessage()),
                     Toast.LENGTH_SHORT).show();
             return false;
@@ -195,6 +193,8 @@ public class PluginService extends Service {
             Toast.makeText(this, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
 
             // update media database
+            // TODO: this does not conform to our new media-db project
+            // TODO: we should create a way to update file via intent to vanilla-music
             MediaScannerConnection.scanFile(this,
                     new String[]{mAudioFile.getFile().getAbsolutePath()},
                     null,

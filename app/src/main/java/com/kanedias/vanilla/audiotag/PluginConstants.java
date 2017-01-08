@@ -36,7 +36,7 @@ public class PluginConstants {
     static final String EXTRA_PARAM_PLUGIN_DESC = "ch.blinkenlights.android.vanilla.extra.PLUGIN_DESC";
 
     // this is passed to plugin when it is selected by user
-    static final String EXTRA_PARAM_FILE_PATH = "ch.blinkenlights.android.vanilla.extra.FILE_PATH";
+    static final String EXTRA_PARAM_URI = "ch.blinkenlights.android.vanilla.extra.URI";
 
     // plugin-to-plugin extras (pass EXTRA_PARAM_PLUGIN_APP too to know whom to answer)
     static final String EXTRA_PARAM_P2P = "ch.blinkenlights.android.vanilla.extra.P2P"; // marker
@@ -50,5 +50,4 @@ public class PluginConstants {
     static final String LOG_TAG = "Vanilla:TagEditorPlugin";
 
     static final String VANILLA_PACKAGE_NAME = "ch.blinkenlights.android.vanilla";
-    static final String VANILLA_SERVICE_NAME = ".PlaybackService";
 }
