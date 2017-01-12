@@ -12,14 +12,17 @@ request a context menu from library screen, select "Plugins" and "Tag editor" af
 * Custom tag editing (lyrics, track no, comment etc.)
 * Lightweight (640 KB in release apk)
 
+# Donate
+
+[<img alt="Patreon Page" src="https://s3.amazonaws.com/patreon_public_assets/toolbox/patreon.png" height="100"/>](https://www.patreon.com/kanedias)
+
 # WIP
 
 * make this plugin work with custom (non-VanillaMusic) intents
-* make this plugin work with lyrics plugin (e.g. show 'save lyrics to embedded tag' button)
 
 # License
 
-Copyright (C) 2016 Oleg Chernovskiy
+Copyright (C) 2016 Oleg "Kanedias" Chernovskiy
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
