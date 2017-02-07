@@ -18,14 +18,13 @@ package com.kanedias.vanilla.audiotag;
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -207,12 +206,12 @@ public class TagEditActivity extends Activity {
     /**
      * We're the good guys, we catch it back from {@link #checkAndRequestPermissions(String)} here.
      * So, if user declined our request, just close the activity entirely.
-     * @param requestCode request code that was entered in {@link ActivityCompat#requestPermissions(Activity, String[], int)}
-     * @param permissions permission array that was entered in {@link ActivityCompat#requestPermissions(Activity, String[], int)}
+     * @param requestCode request code that was entered in {@link Activity#requestPermissions(String[], int)}
+     * @param permissions permission array that was entered in {@link Activity#requestPermissions(String[], int)}
      * @param grantResults results of permission request. Indexes of permissions array are linked with these
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode != PERMISSIONS_REQUEST_CODE) {
@@ -236,9 +235,8 @@ public class TagEditActivity extends Activity {
      * @return true if this app had this permission prior to check, false otherwise.
      */
     private boolean checkAndRequestPermissions(String perm) {
-        int permissionCheck = ContextCompat.checkSelfPermission(this, perm);
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{perm}, PERMISSIONS_REQUEST_CODE);
+        if (!Utils.havePermissions(this, perm)  && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{perm}, PERMISSIONS_REQUEST_CODE);
             return false;
         }
         return true;

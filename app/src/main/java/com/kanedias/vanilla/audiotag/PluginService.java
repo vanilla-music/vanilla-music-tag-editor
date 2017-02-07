@@ -20,12 +20,14 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+import android.os.ParcelFileDescriptor;
+import android.support.copied.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -39,9 +41,17 @@ import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
+import org.jaudiotagger.tag.id3.valuepair.ImageFormats;
+import org.jaudiotagger.tag.images.AndroidArtwork;
+import org.jaudiotagger.tag.images.Artwork;
+import org.jaudiotagger.tag.reference.PictureTypes;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.UUID;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.kanedias.vanilla.audiotag.PluginConstants.*;
@@ -92,7 +102,6 @@ public class PluginService extends Service {
      * @param intent intent passed to start this service
      * @return null if file load failed, plugin binder object otherwise
      */
-    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         if (loadFile()) {
@@ -148,9 +157,7 @@ public class PluginService extends Service {
     }
 
     private void handleLaunchPlugin() {
-        int permResponse = ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE);
-        boolean hasAccessToSd = permResponse == PackageManager.PERMISSION_GRANTED;
-        if (hasAccessToSd && mLaunchIntent.hasExtra(EXTRA_PARAM_P2P)) {
+        if (Utils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && mLaunchIntent.hasExtra(EXTRA_PARAM_P2P)) {
             if(loadFile()) {
                 handleP2pIntent();
             }
@@ -282,6 +289,80 @@ public class PluginService extends Service {
                 response.setPackage(responseApp.packageName);
                 response.putExtra(EXTRA_PARAM_P2P_VAL, values);
                 startService(response);
+                break;
+            }
+            case P2P_READ_ART: {
+                ApplicationInfo responseApp = mLaunchIntent.getParcelableExtra(EXTRA_PARAM_PLUGIN_APP);
+                Artwork cover = mTag.getFirstArtwork();
+                Uri uri = null;
+                try {
+                    if (cover == null) {
+                        Log.w(LOG_TAG, "Artwork is not present for file " + mAudioFile.getFile().getName());
+                        break;
+                    }
+
+                    File coversDir = new File(getCacheDir(), "covers");
+                    if (!coversDir.exists() && !coversDir.mkdir()) {
+                        Log.e(LOG_TAG, "Couldn't create dir for covers! Path " + getCacheDir());
+                        break;
+                    }
+
+                    // cleanup old images
+                    for (File oldImg : coversDir.listFiles()) {
+                        if (!oldImg.delete()) {
+                            Log.w(LOG_TAG, "Couldn't delete old image file! Path " + oldImg);
+                        }
+                    }
+
+                    // write artwork to file
+                    File coverTmpFile = new File(coversDir, UUID.randomUUID().toString());
+                    FileOutputStream fos = new FileOutputStream(coverTmpFile);
+                    fos.write(cover.getBinaryData());
+                    fos.close();
+
+                    // create sharable uri
+                    uri = FileProvider.getUriForFile(this, "com.kanedias.vanilla.audiotag.fileprovider", coverTmpFile);
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "Couldn't write to cache file", e);
+                    Toast.makeText(this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                } finally {
+                    // share uri if created successfully
+                    Intent response = new Intent(ACTION_LAUNCH_PLUGIN);
+                    response.putExtra(EXTRA_PARAM_P2P, P2P_READ_ART);
+                    response.setPackage(responseApp.packageName);
+                    if (uri != null) {
+                        grantUriPermission(responseApp.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        response.putExtra(EXTRA_PARAM_P2P_VAL, uri);
+                    }
+                    startService(response);
+                }
+                break;
+            }
+            case P2P_WRITE_ART: {
+                Uri imgLink = mLaunchIntent.getParcelableExtra(EXTRA_PARAM_P2P_VAL);
+
+                try {
+                    ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(imgLink, "r");
+                    if (pfd == null) {
+                        return;
+                    }
+
+                    FileInputStream fis = new FileInputStream(pfd.getFileDescriptor());
+                    byte[] imgBytes = Utils.readFully(fis);
+
+                    Artwork cover = new AndroidArtwork();
+                    cover.setBinaryData(imgBytes);
+                    cover.setMimeType(ImageFormats.getMimeTypeForBinarySignature(imgBytes));
+                    cover.setDescription("");
+                    cover.setPictureType(PictureTypes.DEFAULT_ID);
+
+                    mTag.setField(cover);
+                } catch (IOException | IllegalArgumentException | FieldDataInvalidException e) {
+                    Log.e(LOG_TAG, "Invalid artwork!", e);
+                    Toast.makeText(this, R.string.invalid_artwork_provided, Toast.LENGTH_SHORT).show();
+                }
+
+                persistChanges();
                 break;
             }
         }

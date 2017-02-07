@@ -26,7 +26,6 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-compat:24.2.1'
     // build from github.com/hexise/jaudiotagger-android (LGPL)
     compile files('libs/jaudiotagger-android.jar')
 }

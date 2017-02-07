@@ -46,6 +46,8 @@ public class PluginConstants {
     // related to tag editor
     static final String P2P_WRITE_TAG = "WRITE_TAG";
     static final String P2P_READ_TAG = "READ_TAG";
+    static final String P2P_WRITE_ART = "WRITE_ART";
+    static final String P2P_READ_ART = "READ_ART";
 
     static final String LOG_TAG = "Vanilla:TagEditorPlugin";
 
