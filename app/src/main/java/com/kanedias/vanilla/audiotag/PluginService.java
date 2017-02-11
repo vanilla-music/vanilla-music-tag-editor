@@ -16,15 +16,22 @@
  */
 package com.kanedias.vanilla.audiotag;
 
+import android.annotation.TargetApi;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.os.Process;
+import android.provider.MediaStore;
 import android.support.copied.FileProvider;
 import android.util.Log;
 import android.widget.Toast;
@@ -172,6 +179,13 @@ public class PluginService extends Service {
     }
 
     /**
+     * @return cached in-memory audio file associated with opened tag
+     */
+    public AudioFile getAudioFile() {
+        return mAudioFile;
+    }
+
+    /**
      * Loads file as {@link AudioFile} and performs initial tag creation if it's absent.
      * If error happens while loading, shows popup indicating error details.
      * @return true if and only if file was successfully read and initialized in tag system, false otherwise
@@ -234,7 +248,7 @@ public class PluginService extends Service {
                     String.format(getString(R.string.error_audio_file) + ", %s",
                             mAudioFile.getFile().getPath(),
                             e.getLocalizedMessage()),
-                    Toast.LENGTH_SHORT).show();
+                    Toast.LENGTH_LONG).show();
         }
     }
 
