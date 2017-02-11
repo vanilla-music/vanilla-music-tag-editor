@@ -12,7 +12,8 @@
         <provider
             android:name="android.support.copied.FileProvider"
             android:authorities="com.kanedias.vanilla.audiotag.fileprovider"
-            android:grantUriPermissions="true">
+            android:grantUriPermissions="true"
+            android:exported="false">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/shared_filepaths" />

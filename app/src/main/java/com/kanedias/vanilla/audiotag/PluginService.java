@@ -19,12 +19,10 @@ package com.kanedias.vanilla.audiotag;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.support.copied.FileProvider;
@@ -48,7 +46,6 @@ import org.jaudiotagger.tag.reference.PictureTypes;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
@@ -214,6 +211,12 @@ public class PluginService extends Service {
      */
     public void persistChanges() {
         try {
+            if (!mAudioFile.getFile().canWrite() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                Toast.makeText(this,R.string.file_on_external_sd_error, Toast.LENGTH_LONG).show();
+                Toast.makeText(this,R.string.file_on_external_sd_sorry, Toast.LENGTH_LONG).show();
+                return;
+            }
+
             AudioFileIO.write(mAudioFile);
             Toast.makeText(this, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
 
