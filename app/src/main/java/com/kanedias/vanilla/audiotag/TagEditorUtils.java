@@ -20,7 +20,10 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
+import org.jaudiotagger.audio.AudioFile;
+
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -29,7 +32,7 @@ import java.io.InputStream;
  *
  * @author Oleg Chernovskiy
  */
-public class Utils {
+public class TagEditorUtils {
 
     /**
      * Checks if all required permissions have been granted
@@ -55,7 +58,25 @@ public class Utils {
             baos.write(buffer, 0, count);
         }
 
+        stream.close();
         return baos.toByteArray();
+    }
+
+
+    /**
+     * Shortcut for {@link #isSafNeeded(File)} for {@link AudioFile}
+     */
+    public static boolean isSafNeeded(AudioFile af) {
+        return isSafNeeded(af.getFile());
+    }
+
+    /**
+     * Check if Android Storage Access Framework routines apply here
+     * @return true if document seems to be SAF-accessible only, false otherwise
+     */
+    public static boolean isSafNeeded(File file) {
+        // on external SD card after KitKat this will return false
+        return !file.canWrite() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     }
 
 }

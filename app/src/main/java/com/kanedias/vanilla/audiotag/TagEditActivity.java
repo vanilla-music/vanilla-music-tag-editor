@@ -16,18 +16,15 @@
  */
 package com.kanedias.vanilla.audiotag;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.ParcelFileDescriptor;
-import android.system.Os;
+import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -39,17 +36,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
-import android.widget.Toast;
 
 import com.kanedias.vanilla.audiotag.misc.HintSpinnerAdapter;
 
-import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
-
-import java.io.File;
-import java.io.FileNotFoundException;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.kanedias.vanilla.audiotag.PluginConstants.*;
@@ -67,7 +59,6 @@ import static com.kanedias.vanilla.audiotag.PluginConstants.*;
 public class TagEditActivity extends Activity {
 
     private static final int PERMISSIONS_REQUEST_CODE = 0;
-    private static final int SAF_REQUEST_CODE = 1;
 
     private EditText mTitleEdit;
     private EditText mArtistEdit;
@@ -114,14 +105,6 @@ public class TagEditActivity extends Activity {
         setupUI();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mService != null) {
-            unbindService(mServiceConn);
-        }
-    }
-
     /**
      * Initialize UI elements with handlers and action listeners
      */
@@ -132,15 +115,10 @@ public class TagEditActivity extends Activity {
                 finish();
             }
         });
-
         mConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isSafRelated()) {
-                    // will be handled after file is picked
-                    return;
-                }
-                mService.persistChanges();
+                mService.writeFile();
                 finish();
             }
         });
@@ -175,30 +153,6 @@ public class TagEditActivity extends Activity {
         mTitleEdit.addTextChangedListener(new FieldKeyListener(FieldKey.TITLE));
         mArtistEdit.addTextChangedListener(new FieldKeyListener(FieldKey.ARTIST));
         mAlbumEdit.addTextChangedListener(new FieldKeyListener(FieldKey.ALBUM));
-    }
-
-    /**
-     * Check if Android Storage Access Framework routines apply here
-     * @return true if document seems to be SAF-accessible only, false otherwise
-     */
-    private boolean isSafRelated() {
-        // on external SD card this will return false, workaround it
-        if (!mService.getAudioFile().getFile().canWrite() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Toast.makeText(this,R.string.file_on_external_sd_warning, Toast.LENGTH_LONG).show();
-            Toast.makeText(this,R.string.file_on_external_sd_workaround, Toast.LENGTH_LONG).show();
-            callSafFilePicker();
-            return true;
-        }
-
-        return false;
-    }
-
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private void callSafFilePicker() {
-        Intent selectFile = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        selectFile.addCategory(Intent.CATEGORY_OPENABLE);
-        selectFile.setType("audio/*");
-        startActivityForResult(selectFile, SAF_REQUEST_CODE);
     }
 
     /**
@@ -248,7 +202,7 @@ public class TagEditActivity extends Activity {
      * @param grantResults results of permission request. Indexes of permissions array are linked with these
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode != PERMISSIONS_REQUEST_CODE) {
@@ -263,34 +217,6 @@ public class TagEditActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == SAF_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            Uri safUri = data.getData();
-            if (safUri == null) {
-                // nothing selected
-                return;
-            }
-
-            try {
-                // we don't have fd-related audiotagger write functions, have to use workaround
-                // some low-level Linux sorcery
-                AudioFile af = mService.getAudioFile();
-                ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(safUri, "rw");
-                File fdLink = new File("/proc/" + android.os.Process.myPid() + "/fd/" + pfd.getFd());
-                File realFile = new File(fdLink.getAbsolutePath());
-                File virtFile = new File(getCacheDir().getAbsolutePath() + "/" + af.getFile().getName()); // f
-                Runtime.getRuntime().exec("ln -s " + fdLink.getAbsolutePath() + " " + virtFile).waitFor();
-                af.setFile(virtFile);
-                mService.persistChanges();
-                virtFile.delete();
-                finish();
-            } catch (Exception e) {
-                // do nothing
-            }
-        }
-    }
-
     /**
      * Checks for permission and requests it if needed.
      * You should catch answer back in {@link #onRequestPermissionsResult(int, String[], int[])}
@@ -300,7 +226,7 @@ public class TagEditActivity extends Activity {
      * @return true if this app had this permission prior to check, false otherwise.
      */
     private boolean checkAndRequestPermissions(String perm) {
-        if (!Utils.havePermissions(this, perm)  && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (!TagEditorUtils.havePermissions(this, perm)  && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{perm}, PERMISSIONS_REQUEST_CODE);
             return false;
         }

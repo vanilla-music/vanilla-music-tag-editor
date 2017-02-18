@@ -10,7 +10,7 @@
         android:icon="@drawable/icon"
         android:supportsRtl="true">
         <provider
-            android:name="android.support.copied.FileProvider"
+            android:name="android.support.v4.content.FileProvider"
             android:authorities="com.kanedias.vanilla.audiotag.fileprovider"
             android:grantUriPermissions="true"
             android:exported="false">
@@ -37,6 +37,10 @@
 
         <activity
             android:name=".TagEditActivity"
+            android:theme="@android:style/Theme.DeviceDefault.Dialog"
+            android:excludeFromRecents="true"/>
+        <activity
+            android:name=".SafRequestActivity"
             android:theme="@android:style/Theme.DeviceDefault.Dialog"
             android:excludeFromRecents="true"/>
     </application>

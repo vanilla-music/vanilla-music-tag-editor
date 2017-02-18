@@ -4,13 +4,26 @@ android {
     compileSdkVersion 24
     buildToolsVersion "25.0.0"
 
+    lintOptions {
+        disable 'MissingTranslation'
+    }
+
     defaultConfig {
         applicationId "com.kanedias.vanilla.audiotag"
         minSdkVersion 14
         targetSdkVersion 24
-        versionCode 5
-        versionName "1.0.4"
+        versionCode 6
+        versionName "1.1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("/home/adonai/devel/keystore/Adonai")
+            storePassword "release"
+            keyAlias "adonai"
+            keyPassword "release"
+        }
     }
 
     buildTypes {
@@ -19,6 +32,10 @@ android {
 
         release {
             zipAlignEnabled true
+            minifyEnabled true
+            shrinkResources true
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -26,6 +43,8 @@ android {
 }
 
 dependencies {
+    // SAF storage access utilities
+    compile 'com.android.support:support-core-utils:24.2.1'
     // build from github.com/hexise/jaudiotagger-android (LGPL)
     compile files('libs/jaudiotagger-android.jar')
 }

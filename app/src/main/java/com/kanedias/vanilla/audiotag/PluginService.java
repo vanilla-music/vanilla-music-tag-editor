@@ -16,23 +16,19 @@
  */
 package com.kanedias.vanilla.audiotag;
 
-import android.annotation.TargetApi;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
-import android.os.Process;
-import android.provider.MediaStore;
-import android.support.copied.FileProvider;
+import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
+import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -42,6 +38,7 @@ import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
@@ -55,6 +52,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -88,6 +88,12 @@ import static com.kanedias.vanilla.audiotag.PluginConstants.*;
  * @author Oleg Chernovskiy
  */
 public class PluginService extends Service {
+
+    static final String EXTRA_PARAM_SAF_P2P = "ch.blinkenlights.android.vanilla.extra.SAF_P2P";
+
+    static final String PREF_SDCARD_URI = "ch.blinkenlights.android.vanilla.pref.SDCARD_URI";
+
+    private SharedPreferences mPrefs;
 
     private Intent mLaunchIntent;
     private AudioFile mAudioFile;
@@ -127,6 +133,21 @@ public class PluginService extends Service {
     }
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+    }
+
+    /**
+     * Main plugin service operation entry point. This is called each time plugins are quieried
+     * and requested by main Vanilla Music app and also when plugins communicate with each other through P2P-intents.
+     * @param intent intent provided by broadcast or request
+     * @param flags - not used
+     * @param startId - not used
+     * @return always constant {@link #START_NOT_STICKY}
+     */
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             final String action = intent.getAction();
@@ -161,13 +182,23 @@ public class PluginService extends Service {
     }
 
     private void handleLaunchPlugin() {
-        if (Utils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && mLaunchIntent.hasExtra(EXTRA_PARAM_P2P)) {
+        if (mLaunchIntent.hasExtra(EXTRA_PARAM_SAF_P2P)) {
+            // it's SAF intent that is returned from SAF activity, should have URI inside
+            persistThroughSaf(mLaunchIntent);
+            return;
+        }
+
+        // if it's P2P intent, just try to read/write file as requested
+        if (TagEditorUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && mLaunchIntent.hasExtra(EXTRA_PARAM_P2P)) {
             if(loadFile()) {
                 handleP2pIntent();
             }
             return;
         }
 
+        // either we have no permissions to write to SD and activity is requested
+        // or this is normal user-requested operation (non-P2P)
+        // start activity!
         Intent dialogIntent = new Intent(this, TagEditActivity.class);
         dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         dialogIntent.putExtras(mLaunchIntent);
@@ -176,13 +207,6 @@ public class PluginService extends Service {
 
     public Tag getTag() {
         return mTag;
-    }
-
-    /**
-     * @return cached in-memory audio file associated with opened tag
-     */
-    public AudioFile getAudioFile() {
-        return mAudioFile;
     }
 
     /**
@@ -219,28 +243,37 @@ public class PluginService extends Service {
         return true;
     }
 
-    /**
-     * Writes changes in tags into file and closes activity.
-     * If something goes wrong, leaves activity intact.
-     */
-    public void persistChanges() {
-        try {
-            if (!mAudioFile.getFile().canWrite() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                Toast.makeText(this,R.string.file_on_external_sd_error, Toast.LENGTH_LONG).show();
-                Toast.makeText(this,R.string.file_on_external_sd_sorry, Toast.LENGTH_LONG).show();
+    public void writeFile() {
+        if (TagEditorUtils.isSafNeeded(mAudioFile)) {
+            if (mPrefs.contains(PREF_SDCARD_URI)) {
+                // we already got the permission!
+                persistThroughSaf(null);
                 return;
             }
 
+            // request SAF permissions in SAF activity
+            Intent dialogIntent = new Intent(this, SafRequestActivity.class);
+            dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            dialogIntent.putExtras(mLaunchIntent);
+            startActivity(dialogIntent);
+            // it will pass us URI back after the work is done
+        } else {
+            persistThroughFile();
+        }
+    }
+
+    /**
+     * Writes changes in tags directly into file and closes activity.
+     * Call this if you're absolutely sure everything is right with file and tag.
+     */
+    private void persistThroughFile() {
+        try {
             AudioFileIO.write(mAudioFile);
             Toast.makeText(this, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
 
             // update media database
-            // TODO: this does not conform to our new media-db project
-            // TODO: we should create a way to update file via intent to vanilla-music
-            MediaScannerConnection.scanFile(this,
-                    new String[]{mAudioFile.getFile().getAbsolutePath()},
-                    null,
-                    null);
+            File persisted = mAudioFile.getFile();
+            MediaScannerConnection.scanFile(this, new String[]{persisted.getAbsolutePath()}, null, null);
         } catch (CannotWriteException e) {
             Log.e(LOG_TAG,
                     String.format(getString(R.string.error_audio_file), mAudioFile.getFile().getPath()), e);
@@ -250,6 +283,98 @@ public class PluginService extends Service {
                             e.getLocalizedMessage()),
                     Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Write changes through SAF framework - the only way to do it in Android > 4.4 when working with SD card
+     * @param activityResponse response with URI contained in. Can be null if tree permission is already given.
+     */
+    private void persistThroughSaf(Intent activityResponse) {
+        Uri safUri;
+        if (mPrefs.contains(PREF_SDCARD_URI)) {
+            // no sorcery can allow you to gain URI to the document representing file you've been provided with
+            // you have to find it again using now Document API
+
+            // /storage/volume/Music/some.mp3 will become [storage, volume, music, some.mp3]
+            List<String> pathSegments = new ArrayList<>(Arrays.asList(mAudioFile.getFile().getAbsolutePath().split("/")));
+            Uri allowedSdRoot = Uri.parse(mPrefs.getString(PREF_SDCARD_URI, ""));
+            safUri = findInDocumentTree(DocumentFile.fromTreeUri(this, allowedSdRoot), pathSegments);
+        } else {
+            Intent originalSafResponse = activityResponse.getParcelableExtra(EXTRA_PARAM_SAF_P2P);
+            safUri = originalSafResponse.getData();
+        }
+
+        if (safUri == null) {
+            // nothing selected or invalid file?
+            Toast.makeText(this, R.string.saf_nothing_selected, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        try {
+            // we don't have fd-related audiotagger write functions, have to use workaround
+            // write audio file to temp cache dir
+            // jaudiotagger can't work through file descriptor, sadly
+            File original = mAudioFile.getFile();
+            File temp = File.createTempFile("tmp-media", '.' + Utils.getExtension(original));
+            Utils.copy(original, temp); // jtagger writes only header, we should copy the rest
+            temp.deleteOnExit(); // in case of exception it will be deleted too
+            mAudioFile.setFile(temp);
+            AudioFileIO.write(mAudioFile);
+
+            // retrieve FD from SAF URI
+            ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(safUri, "rw");
+            if (pfd == null) {
+                // should not happen
+                Log.e(LOG_TAG, "SAF provided incorrect URI!" + safUri);
+                return;
+            }
+
+            // now read persisted data and write it to real FD provided by SAF
+            FileInputStream fis = new FileInputStream(temp);
+            byte[] audioContent = TagEditorUtils.readFully(fis);
+            FileOutputStream fos = new FileOutputStream(pfd.getFileDescriptor());
+            fos.write(audioContent);
+            fos.close();
+
+            // delete temporary file used
+            temp.delete();
+
+            // rescan original file
+            MediaScannerConnection.scanFile(this, new String[]{original.getAbsolutePath()}, null, null);
+            Toast.makeText(this, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, getString(R.string.saf_write_error) + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Log.e(LOG_TAG, "Failed to write to file descriptor provided by SAF!", e);
+        }
+    }
+
+    /**
+     * Finds needed file through Document API for SAF. It's not optimized yet - you can still gain wrong URI on
+     * files such as "/a/b/c.mp3" and "/b/a/c.mp3", but I consider it complete enough to be usable.
+     * @param currentDir - document file representing current dir of search
+     * @param remainingPathSegments - path segments that are left to find
+     * @return URI for found file. Null if nothing found.
+     */
+    @Nullable
+    private Uri findInDocumentTree(DocumentFile currentDir, List<String> remainingPathSegments) {
+        for (DocumentFile file : currentDir.listFiles()) {
+            int index = remainingPathSegments.indexOf(file.getName());
+            if (index == -1) {
+                continue;
+            }
+
+            if (file.isDirectory()) {
+                remainingPathSegments.remove(file.getName());
+                return findInDocumentTree(file, remainingPathSegments);
+            }
+
+            if (file.isFile() && index == remainingPathSegments.size() - 1) {
+                // got to the last part
+                return file.getUri();
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -283,7 +408,7 @@ public class PluginService extends Service {
                         Log.e(LOG_TAG, "Error writing tag", e);
                     }
                 }
-                persistChanges();
+                writeFile();
                 break;
             }
             case P2P_READ_TAG: {
@@ -365,7 +490,7 @@ public class PluginService extends Service {
                     }
 
                     FileInputStream fis = new FileInputStream(pfd.getFileDescriptor());
-                    byte[] imgBytes = Utils.readFully(fis);
+                    byte[] imgBytes = TagEditorUtils.readFully(fis);
 
                     Artwork cover = new AndroidArtwork();
                     cover.setBinaryData(imgBytes);
@@ -379,7 +504,7 @@ public class PluginService extends Service {
                     Toast.makeText(this, R.string.invalid_artwork_provided, Toast.LENGTH_SHORT).show();
                 }
 
-                persistChanges();
+                writeFile();
                 break;
             }
         }
