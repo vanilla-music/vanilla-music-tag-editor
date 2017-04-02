@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 25
     buildToolsVersion "25.0.0"
 
     lintOptions {
@@ -11,9 +11,9 @@ android {
     defaultConfig {
         applicationId "com.kanedias.vanilla.audiotag"
         minSdkVersion 14
-        targetSdkVersion 24
-        versionCode 7
-        versionName "1.1.1"
+        targetSdkVersion 25
+        versionCode 8
+        versionName "1.1.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -44,7 +44,7 @@ android {
 
 dependencies {
     // SAF storage access utilities
-    compile 'com.android.support:support-core-utils:24.2.1'
+    compile 'com.android.support:support-core-utils:25.2.0'
     // build from github.com/hexise/jaudiotagger-android (LGPL)
     compile files('libs/jaudiotagger-android.jar')
 }
