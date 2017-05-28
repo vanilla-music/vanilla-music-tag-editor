@@ -2,10 +2,11 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "25.0.2"
 
     lintOptions {
         disable 'MissingTranslation'
+        disable 'ExtraTranslation'
     }
 
     defaultConfig {
@@ -44,7 +45,7 @@ android {
 
 dependencies {
     // SAF storage access utilities
-    compile 'com.android.support:support-core-utils:25.2.0'
+    compile project(':plugin-commons')
     // build from github.com/hexise/jaudiotagger-android (LGPL)
     compile files('libs/jaudiotagger-android.jar')
 }

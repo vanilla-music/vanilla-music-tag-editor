@@ -63,20 +63,4 @@ public class TagEditorUtils {
     }
 
 
-    /**
-     * Shortcut for {@link #isSafNeeded(File)} for {@link AudioFile}
-     */
-    public static boolean isSafNeeded(AudioFile af) {
-        return isSafNeeded(af.getFile());
-    }
-
-    /**
-     * Check if Android Storage Access Framework routines apply here
-     * @return true if document seems to be SAF-accessible only, false otherwise
-     */
-    public static boolean isSafNeeded(File file) {
-        // on external SD card after KitKat this will return false
-        return !file.canWrite() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-    }
-
 }

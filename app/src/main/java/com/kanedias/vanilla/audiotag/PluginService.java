@@ -32,6 +32,9 @@ import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.kanedias.vanilla.plugins.PluginConstants;
+import com.kanedias.vanilla.plugins.saf.SafRequestActivity;
+import com.kanedias.vanilla.plugins.saf.SafUtils;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
@@ -56,9 +59,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
-import static com.kanedias.vanilla.audiotag.PluginConstants.*;
+import static com.kanedias.vanilla.plugins.PluginConstants.*;
 
 /**
  * Main service of Plugin system.
@@ -89,9 +93,7 @@ import static com.kanedias.vanilla.audiotag.PluginConstants.*;
  */
 public class PluginService extends Service {
 
-    static final String EXTRA_PARAM_SAF_P2P = "ch.blinkenlights.android.vanilla.extra.SAF_P2P";
-
-    static final String PREF_SDCARD_URI = "ch.blinkenlights.android.vanilla.pref.SDCARD_URI";
+    private AtomicInteger mBindCounter = new AtomicInteger(0);
 
     private SharedPreferences mPrefs;
 
@@ -114,6 +116,7 @@ public class PluginService extends Service {
      */
     @Override
     public IBinder onBind(Intent intent) {
+        mBindCounter.incrementAndGet();
         if (loadFile()) {
             return new PluginBinder();
         }
@@ -128,7 +131,9 @@ public class PluginService extends Service {
     public boolean onUnbind(Intent intent) {
         // we need to stop this service or ServiceConnection will remain active and onBind won't be called again
         // activity will see old file loaded in such case!
-        stopSelf();
+        if(mBindCounter.decrementAndGet() == 0) {
+            stopSelf();
+        }
         return false;
     }
 
@@ -216,6 +221,10 @@ public class PluginService extends Service {
      * @return true if and only if file was successfully read and initialized in tag system, false otherwise
      */
     public boolean loadFile() {
+        if (mTag != null) {
+            return true; // don't reload same file
+        }
+
         // we need only path passed to us
         Uri fileUri = mLaunchIntent.getParcelableExtra(EXTRA_PARAM_URI);
         if (fileUri == null) {
@@ -245,7 +254,7 @@ public class PluginService extends Service {
     }
 
     public void writeFile() {
-        if (TagEditorUtils.isSafNeeded(mAudioFile)) {
+        if (SafUtils.isSafNeeded(mAudioFile.getFile())) {
             if (mPrefs.contains(PREF_SDCARD_URI)) {
                 // we already got the permission!
                 persistThroughSaf(null);
@@ -255,6 +264,7 @@ public class PluginService extends Service {
             // request SAF permissions in SAF activity
             Intent dialogIntent = new Intent(this, SafRequestActivity.class);
             dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            dialogIntent.putExtra(PluginConstants.EXTRA_PARAM_PLUGIN_APP, getApplicationInfo());
             dialogIntent.putExtras(mLaunchIntent);
             startActivity(dialogIntent);
             // it will pass us URI back after the work is done

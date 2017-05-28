@@ -40,7 +40,7 @@
             android:theme="@android:style/Theme.DeviceDefault.Dialog"
             android:excludeFromRecents="true"/>
         <activity
-            android:name=".SafRequestActivity"
+            android:name="com.kanedias.vanilla.plugins.saf.SafRequestActivity"
             android:theme="@android:style/Theme.DeviceDefault.Dialog"
             android:excludeFromRecents="true"/>
     </application>

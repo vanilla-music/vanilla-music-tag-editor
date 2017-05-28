@@ -44,7 +44,7 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
-import static com.kanedias.vanilla.audiotag.PluginConstants.*;
+import static com.kanedias.vanilla.plugins.PluginConstants.*;
 
 /**
  * Main activity of Tag Editor plugin. This will be presented as a dialog to the user
@@ -103,6 +103,12 @@ public class TagEditActivity extends Activity {
         mCancel = (Button) findViewById(R.id.cancel_tags_button);
 
         setupUI();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(mServiceConn);
     }
 
     /**

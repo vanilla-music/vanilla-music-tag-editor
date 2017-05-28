@@ -11,10 +11,4 @@
     <string name="file_written_successfully">File written successfully!</string>
     <string name="invalid_tag_requested">Invalid tag requested</string>
     <string name="invalid_artwork_provided">Invalid artwork provided</string>
-    <string name="file_on_external_sd_warning">File seems to be on external SD card, android doesn\'t provide decent API for those</string>
-    <string name="file_on_external_sd_workaround">As a workaround, please select this file through SAF file picker to grant temporary permission</string>
-    <string name="file_on_external_sd_hint">File path to select: %s</string>
-    <string name="saf_nothing_selected">Nothing selected from SAF file picker, exiting…</string>
-    <string name="saf_write_error">SAF exchange error: </string>
-    <string name="need_sd_card_access">SD card access required, steps below</string>
 </resources>
