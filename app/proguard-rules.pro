@@ -17,3 +17,4 @@
 #}
 
 -keep class org.jaudiotagger.**  { *; }
+-dontwarn org.jaudiotagger.**
