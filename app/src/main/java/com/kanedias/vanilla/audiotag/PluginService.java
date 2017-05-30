@@ -33,6 +33,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.kanedias.vanilla.plugins.PluginConstants;
+import com.kanedias.vanilla.plugins.PluginUtils;
 import com.kanedias.vanilla.plugins.saf.SafRequestActivity;
 import com.kanedias.vanilla.plugins.saf.SafUtils;
 import org.jaudiotagger.audio.AudioFile;
@@ -195,10 +196,11 @@ public class PluginService extends Service {
         }
 
         // if it's P2P intent, just try to read/write file as requested
-        if (TagEditorUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && mLaunchIntent.hasExtra(EXTRA_PARAM_P2P)) {
+        if (PluginUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && mLaunchIntent.hasExtra(EXTRA_PARAM_P2P)) {
             if(loadFile()) {
                 handleP2pIntent();
             }
+            stopSelf();
             return;
         }
 
@@ -241,10 +243,10 @@ public class PluginService extends Service {
             mTag = mAudioFile.getTagOrCreateAndSetDefault();
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
             Log.e(LOG_TAG,
-                    String.format(getString(R.string.error_audio_file), fileUri), e);
+                    String.format(getString(R.string.error_audio_file), file.getAbsolutePath()), e);
             Toast.makeText(this,
                     String.format(getString(R.string.error_audio_file) + ", %s",
-                            fileUri,
+                            file.getAbsolutePath(),
                             e.getLocalizedMessage()),
                     Toast.LENGTH_SHORT).show();
             return false;
@@ -262,11 +264,11 @@ public class PluginService extends Service {
             }
 
             // request SAF permissions in SAF activity
-            Intent dialogIntent = new Intent(this, SafRequestActivity.class);
-            dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            dialogIntent.putExtra(PluginConstants.EXTRA_PARAM_PLUGIN_APP, getApplicationInfo());
-            dialogIntent.putExtras(mLaunchIntent);
-            startActivity(dialogIntent);
+            Intent safIntent = new Intent(this, SafRequestActivity.class);
+            safIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            safIntent.putExtra(PluginConstants.EXTRA_PARAM_PLUGIN_APP, getApplicationInfo());
+            safIntent.putExtras(mLaunchIntent);
+            startActivity(safIntent);
             // it will pass us URI back after the work is done
         } else {
             persistThroughFile();

@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "25.0.3"
 
     lintOptions {
         disable 'MissingTranslation'
@@ -46,6 +46,6 @@ android {
 dependencies {
     // SAF storage access utilities
     compile project(':plugin-commons')
-    // build from github.com/hexise/jaudiotagger-android (LGPL)
-    compile files('libs/jaudiotagger-android.jar')
+    // build from https://bitbucket.org/ijabz/jaudiotagger (LGPL)
+    compile 'com.github.Adonai:jaudiotagger-android:2.2.6-kanedias'
 }

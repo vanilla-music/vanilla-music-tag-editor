@@ -39,6 +39,7 @@ import android.widget.SpinnerAdapter;
 
 import com.kanedias.vanilla.audiotag.misc.HintSpinnerAdapter;
 
+import com.kanedias.vanilla.plugins.PluginUtils;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
@@ -108,7 +109,9 @@ public class TagEditActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConn);
+        if (mService != null) {
+            unbindService(mServiceConn);
+        }
     }
 
     /**
@@ -170,7 +173,7 @@ public class TagEditActivity extends Activity {
         super.onResume();
 
         // onResume will fire both on first launch and on return from permission request
-        if (!checkAndRequestPermissions(WRITE_EXTERNAL_STORAGE)) {
+        if (!PluginUtils.checkAndRequestPermissions(this, WRITE_EXTERNAL_STORAGE)) {
             return;
         }
 
@@ -201,7 +204,7 @@ public class TagEditActivity extends Activity {
     }
 
     /**
-     * We're the good guys, we catch it back from {@link #checkAndRequestPermissions(String)} here.
+     * We're the good guys, we catch it back from {@link PluginUtils#checkAndRequestPermissions(Activity, String)} here.
      * So, if user declined our request, just close the activity entirely.
      * @param requestCode request code that was entered in {@link Activity#requestPermissions(String[], int)}
      * @param permissions permission array that was entered in {@link Activity#requestPermissions(String[], int)}
@@ -221,22 +224,6 @@ public class TagEditActivity extends Activity {
                 finish(); // user denied our request, don't bother again on resume
             }
         }
-    }
-
-    /**
-     * Checks for permission and requests it if needed.
-     * You should catch answer back in {@link #onRequestPermissionsResult(int, String[], int[])}
-     * <br/>
-     * (Or don't. This way request will appear forever as {@link #onResume()} will never end)
-     * @param perm permission to request
-     * @return true if this app had this permission prior to check, false otherwise.
-     */
-    private boolean checkAndRequestPermissions(String perm) {
-        if (!TagEditorUtils.havePermissions(this, perm)  && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{perm}, PERMISSIONS_REQUEST_CODE);
-            return false;
-        }
-        return true;
     }
 
     private final class FieldKeyListener implements TextWatcher {

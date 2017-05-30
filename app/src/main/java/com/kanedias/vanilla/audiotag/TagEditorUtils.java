@@ -34,20 +34,6 @@ import java.io.InputStream;
  */
 public class TagEditorUtils {
 
-    /**
-     * Checks if all required permissions have been granted
-     *
-     * @param context The context to use
-     * @return boolean true if all permissions have been granded
-     */
-    public static boolean havePermissions(Context context, String perm) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (context.checkSelfPermission(perm) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        } // else: granted during installation
-        return true;
-    }
 
     // Reads an InputStream fully to byte array
     public static byte[] readFully(InputStream stream) throws IOException {
