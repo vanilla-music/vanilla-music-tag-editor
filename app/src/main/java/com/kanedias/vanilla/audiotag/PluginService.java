@@ -43,10 +43,7 @@ import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.generic.Utils;
-import org.jaudiotagger.tag.FieldDataInvalidException;
-import org.jaudiotagger.tag.FieldKey;
-import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.TagException;
+import org.jaudiotagger.tag.*;
 import org.jaudiotagger.tag.id3.valuepair.ImageFormats;
 import org.jaudiotagger.tag.images.AndroidArtwork;
 import org.jaudiotagger.tag.images.Artwork;
@@ -142,6 +139,7 @@ public class PluginService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        TagOptionSingleton.getInstance().setAndroid(true);
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
     }
 

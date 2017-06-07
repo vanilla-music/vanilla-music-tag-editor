@@ -13,8 +13,8 @@ android {
         applicationId "com.kanedias.vanilla.audiotag"
         minSdkVersion 14
         targetSdkVersion 25
-        versionCode 9
-        versionName "1.2.0"
+        versionCode 10
+        versionName "1.2.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -47,5 +47,5 @@ dependencies {
     // SAF storage access utilities
     compile project(':plugin-commons')
     // build from https://bitbucket.org/ijabz/jaudiotagger (LGPL)
-    compile 'com.github.Adonai:jaudiotagger-android:2.2.6-kanedias'
+    compile 'com.github.Adonai:jaudiotagger-android:2.2.6-6-kanedias'
 }
