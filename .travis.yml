@@ -1,0 +1,29 @@
+language: android
+jdk:
+- oraclejdk8
+env:
+  global:
+  - ADB_INSTALL_TIMEOUT=8
+android:
+  components:
+  - tools
+  - platform-tools
+  - extra-google-m2repository
+  - extra-android-m2repository
+  - build-tools-25.0.3
+  - android-25
+before_cache:
+- rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+script:
+- "./gradlew --info assembleDebug"
+deploy:
+  provider: releases
+  api_key:
+    secure: bvvi+MAqOmYBi4kVY00HBofpAFLF7ehf4crpNiHMQuzvjv6nGkXQp4dhphz2HHf6rCtLbeUtVW4wmXMETjiF4reWsC01ee+qvdiTqmgevu5wvvHR/NRuK81fHaHIHU3Jr918HiG3wZuOibKhWtfc043GVXJsVPZobAq7IvajdfGzGooTyhgGo3JTuWjpEnB9FpPmMuoWJSWg0I49ldyO3nA7y98DvbHSrJIcM7IyrHV2+Qf3M+gZ8roJQd35rBJxG0WPzxyjOEJ69AC/wtmFqaaTnp+eQHVcvLB9OvqPL6TYxIOg5r8GkoOCgAZ0hBLo4FVP0Igi1ninoU3T7DDrAjmjCA/mjlSRUnOjA1/27EW/Lx3CjJReRKaxayfK6IXiIo5CdY5vYiPCX8+1uPMNx7Nqp3OUybJyFoCE0eblDy3Zb/CrmumJ4uhmKgtOlTJsh66BvJoZhStziEU2QYTza6qNOqUzMS37Lt0uO7vYJPOiMnhABTFYccTqS8psUgQKRGRh1jacQFSN7m5a/C0RN2URlBouPdNQkVMhmy1/Qrxm/iWe4z7JOXKslFjVUVvgeU2KPdDmNIRrGyW/0gsQ4Knid6wAZFmBOAfOW7C3m8TSMENYe9r78Q7wwpQu4z/ieKmi/x9S+6mRU2U76mpVxmKU5nSjCaYaK4U3Cld+QFI=
+  file: app/build/outputs/apk/app-debug.apk
+  on:
+    tags: true
