@@ -509,6 +509,7 @@ public class PluginService extends Service {
                     cover.setDescription("");
                     cover.setPictureType(PictureTypes.DEFAULT_ID);
 
+                    mTag.deleteArtworkField();
                     mTag.setField(cover);
                 } catch (IOException | IllegalArgumentException | FieldDataInvalidException e) {
                     Log.e(LOG_TAG, "Invalid artwork!", e);
