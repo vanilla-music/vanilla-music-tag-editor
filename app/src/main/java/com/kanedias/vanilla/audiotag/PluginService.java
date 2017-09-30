@@ -44,9 +44,11 @@ import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.generic.Utils;
 import org.jaudiotagger.tag.*;
+import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
 import org.jaudiotagger.tag.id3.valuepair.ImageFormats;
 import org.jaudiotagger.tag.images.AndroidArtwork;
 import org.jaudiotagger.tag.images.Artwork;
+import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.jaudiotagger.tag.reference.PictureTypes;
 
 import java.io.File;
@@ -253,6 +255,19 @@ public class PluginService extends Service {
         return true;
     }
 
+    /**
+     * upgrades ID3v2.x tag to ID3v2.4 for loaded file.
+     * Call this method only if you know exactly that file contains ID3 tag.
+     */
+    public void upgradeID3v2() {
+        mTag = mAudioFile.convertID3Tag((AbstractID3v2Tag) mTag, ID3V2Version.ID3_V24);
+        mAudioFile.setTag(mTag);
+        writeFile();
+    }
+
+    /**
+     * Writes file to backing filesystem provider, this may be either SAF-managed sdcard or internal storage.
+     */
     public void writeFile() {
         if (SafUtils.isSafNeeded(mAudioFile.getFile())) {
             if (mPrefs.contains(PREF_SDCARD_URI)) {

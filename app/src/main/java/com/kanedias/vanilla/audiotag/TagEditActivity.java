@@ -17,11 +17,12 @@
 package com.kanedias.vanilla.audiotag;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -43,6 +44,7 @@ import com.kanedias.vanilla.plugins.PluginUtils;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.id3.ID3v22Tag;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.kanedias.vanilla.plugins.PluginConstants.*;
@@ -82,6 +84,7 @@ public class TagEditActivity extends Activity {
             mService = ((PluginService.PluginBinder) service).getService();
             mTag = mService.getTag();
             fillInitialValues();
+            miscellaneousChecks();
         }
 
         @Override
@@ -201,6 +204,27 @@ public class TagEditActivity extends Activity {
         mTitleEdit.setText(mTag.getFirst(FieldKey.TITLE));
         mArtistEdit.setText(mTag.getFirst(FieldKey.ARTIST));
         mAlbumEdit.setText(mTag.getFirst(FieldKey.ALBUM));
+    }
+
+    /**
+     * Miscellaneous checks, e.g. re-tag requests etc.
+     */
+    private void miscellaneousChecks() {
+        // check we need a re-tag
+        if (mTag instanceof ID3v22Tag) {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.re_tag)
+                    .setMessage(R.string.id3_v22_to_v24)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mService.upgradeID3v2();
+                            mTag = mService.getTag(); // tag was updated, refresh it from service
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        }
     }
 
     /**

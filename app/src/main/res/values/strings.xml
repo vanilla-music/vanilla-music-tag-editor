@@ -11,4 +11,6 @@
     <string name="file_written_successfully">File written successfully!</string>
     <string name="invalid_tag_requested">Invalid tag requested</string>
     <string name="invalid_artwork_provided">Invalid artwork provided</string>
+    <string name="re_tag">Re-tag</string>
+    <string name="id3_v22_to_v24">Do you want to re-tag ID3 v2.2 to v2.4 in this file for better compatibility?</string>
 </resources>
