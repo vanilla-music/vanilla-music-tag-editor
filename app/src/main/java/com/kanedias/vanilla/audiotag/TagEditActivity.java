@@ -30,6 +30,9 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -37,9 +40,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
+import android.widget.Toast;
 
 import com.kanedias.vanilla.audiotag.misc.HintSpinnerAdapter;
 
+import com.kanedias.vanilla.plugins.DialogActivity;
 import com.kanedias.vanilla.plugins.PluginUtils;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
@@ -59,7 +64,7 @@ import static com.kanedias.vanilla.plugins.PluginConstants.*;
  *
  * @author Oleg Chernovskiy
  */
-public class TagEditActivity extends Activity {
+public class TagEditActivity extends DialogActivity {
 
     private static final int PERMISSIONS_REQUEST_CODE = 0;
 
@@ -115,6 +120,25 @@ public class TagEditActivity extends Activity {
         if (mService != null) {
             unbindService(mServiceConn);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = new MenuInflater(this);
+        inflater.inflate(R.menu.tag_options, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.reload_option:
+                mService.loadFile(true);
+                mTag = mService.getTag();
+                fillInitialValues();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -204,6 +228,8 @@ public class TagEditActivity extends Activity {
         mTitleEdit.setText(mTag.getFirst(FieldKey.TITLE));
         mArtistEdit.setText(mTag.getFirst(FieldKey.ARTIST));
         mAlbumEdit.setText(mTag.getFirst(FieldKey.ALBUM));
+        mCustomTagSelector.setSelection(0);
+        mCustomTagEdit.setText("");
     }
 
     /**
@@ -275,6 +301,11 @@ public class TagEditActivity extends Activity {
             } catch (FieldDataInvalidException e) {
                 // should not happen
                 Log.e(LOG_TAG, "Error writing tag", e);
+            } catch (UnsupportedOperationException uoe) {
+                // e.g. key == FieldKey.COVER_ART
+                Toast.makeText(TagEditActivity.this, R.string.not_supported_use_other_plugin,
+                        Toast.LENGTH_LONG).show();
+                Log.e(LOG_TAG, "Unsupported writing text to this tag", uoe);
             }
         }
     }

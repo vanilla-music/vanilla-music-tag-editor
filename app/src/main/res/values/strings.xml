@@ -13,4 +13,6 @@
     <string name="invalid_artwork_provided">Invalid artwork provided</string>
     <string name="re_tag">Re-tag</string>
     <string name="id3_v22_to_v24">Do you want to re-tag ID3 v2.2 to v2.4 in this file for better compatibility?</string>
+    <string name="reload">Reload</string>
+    <string name="not_supported_use_other_plugin">Cannot write text data to such tag, try using other plugins</string>
 </resources>

@@ -37,7 +37,7 @@
 
         <activity
             android:name=".TagEditActivity"
-            android:theme="@android:style/Theme.DeviceDefault.Dialog"
+            android:theme="@style/DialogTheme"
             android:excludeFromRecents="true"/>
         <activity
             android:name="com.kanedias.vanilla.plugins.saf.SafRequestActivity"

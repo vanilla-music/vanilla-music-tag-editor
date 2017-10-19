@@ -3,14 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/activity_tag_edit"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
         tools:context=".TagEditActivity">
 
         <EditText
@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="10"
+            android:maxLines="6"
             android:selectAllOnFocus="true"
             android:layout_below="@+id/song_custom_tag_selector"
             android:layout_centerHorizontal="true"
@@ -76,7 +76,6 @@
         android:layout_height="wrap_content"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:paddingTop="4dp"
         android:paddingBottom="4dp">
 
         <Button

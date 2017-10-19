@@ -117,7 +117,7 @@ public class PluginService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         mBindCounter.incrementAndGet();
-        if (loadFile()) {
+        if (loadFile(false)) {
             return new PluginBinder();
         }
         return null;
@@ -197,7 +197,7 @@ public class PluginService extends Service {
 
         // if it's P2P intent, just try to read/write file as requested
         if (PluginUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && mLaunchIntent.hasExtra(EXTRA_PARAM_P2P)) {
-            if(loadFile()) {
+            if(loadFile(false)) {
                 handleP2pIntent();
             }
             stopSelf();
@@ -222,8 +222,8 @@ public class PluginService extends Service {
      * If error happens while loading, shows popup indicating error details.
      * @return true if and only if file was successfully read and initialized in tag system, false otherwise
      */
-    public boolean loadFile() {
-        if (mTag != null) {
+    public boolean loadFile(boolean force) {
+        if (!force && mTag != null) {
             return true; // don't reload same file
         }
 
