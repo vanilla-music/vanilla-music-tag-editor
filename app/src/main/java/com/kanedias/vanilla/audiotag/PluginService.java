@@ -269,7 +269,7 @@ public class PluginService extends Service {
      * Writes file to backing filesystem provider, this may be either SAF-managed sdcard or internal storage.
      */
     public void writeFile() {
-        if (SafUtils.isSafNeeded(mAudioFile.getFile())) {
+        if (SafUtils.isSafNeeded(mAudioFile.getFile(), this)) {
             if (mPrefs.contains(PREF_SDCARD_URI)) {
                 // we already got the permission!
                 persistThroughSaf(null);
