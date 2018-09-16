@@ -3,13 +3,12 @@
 This repository hosts plugin for Vanilla Music.
 Prior to use it you should have [Vanilla Music player](https://github.com/vanilla-music/vanilla) installed
 
-Once both player and this plugin are installed, 
-request a context menu from library screen, select "Plugins" and "Tag editor" afterwards.
+Once both player and this plugin are installed, request a context menu from library screen, select "Plugins" and "Tag editor" afterwards.
 
 # Features
 
 * Tag editing of multiple audiofile formats (mp3/ogg/flac)
-* Custom tag editing (lyrics, track no, comment etc.)
+* Custom tag editing (lyrics, track number, comment etc.)
 * Lightweight (640 KB in release apk)
 
 # Donate

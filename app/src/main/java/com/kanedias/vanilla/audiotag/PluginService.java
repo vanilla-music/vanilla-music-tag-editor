@@ -36,6 +36,7 @@ import com.kanedias.vanilla.plugins.PluginConstants;
 import com.kanedias.vanilla.plugins.PluginUtils;
 import com.kanedias.vanilla.plugins.saf.SafRequestActivity;
 import com.kanedias.vanilla.plugins.saf.SafUtils;
+
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
@@ -43,7 +44,11 @@ import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.audio.generic.Utils;
-import org.jaudiotagger.tag.*;
+import org.jaudiotagger.tag.FieldDataInvalidException;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.TagException;
+import org.jaudiotagger.tag.TagOptionSingleton;
 import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
 import org.jaudiotagger.tag.id3.valuepair.ImageFormats;
 import org.jaudiotagger.tag.images.AndroidArtwork;
@@ -62,7 +67,24 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
-import static com.kanedias.vanilla.plugins.PluginConstants.*;
+import static com.kanedias.vanilla.plugins.PluginConstants.ACTION_HANDLE_PLUGIN_PARAMS;
+import static com.kanedias.vanilla.plugins.PluginConstants.ACTION_LAUNCH_PLUGIN;
+import static com.kanedias.vanilla.plugins.PluginConstants.ACTION_REQUEST_PLUGIN_PARAMS;
+import static com.kanedias.vanilla.plugins.PluginConstants.ACTION_WAKE_PLUGIN;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_P2P;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_P2P_KEY;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_P2P_VAL;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_PLUGIN_APP;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_PLUGIN_DESC;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_PLUGIN_NAME;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_SAF_P2P;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_URI;
+import static com.kanedias.vanilla.plugins.PluginConstants.LOG_TAG;
+import static com.kanedias.vanilla.plugins.PluginConstants.P2P_READ_ART;
+import static com.kanedias.vanilla.plugins.PluginConstants.P2P_READ_TAG;
+import static com.kanedias.vanilla.plugins.PluginConstants.P2P_WRITE_ART;
+import static com.kanedias.vanilla.plugins.PluginConstants.P2P_WRITE_TAG;
+import static com.kanedias.vanilla.plugins.PluginConstants.PREF_SDCARD_URI;
 
 /**
  * Main service of Plugin system.

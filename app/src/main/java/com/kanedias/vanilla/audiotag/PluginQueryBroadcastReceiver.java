@@ -20,8 +20,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import com.kanedias.vanilla.plugins.PluginConstants;
 
+import com.kanedias.vanilla.plugins.PluginConstants;
 /**
  * Broadcast receiver used for retrieving query intents
  *

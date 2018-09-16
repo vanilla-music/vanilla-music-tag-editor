@@ -165,5 +165,4 @@ public class HintSpinnerAdapter implements SpinnerAdapter, ListAdapter {
     public boolean isEnabled(int position) {
         return position != 0; // Don't allow the 'hint' item to be picked.
     }
-
 }

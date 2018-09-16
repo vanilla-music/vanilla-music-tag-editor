@@ -19,7 +19,6 @@ package com.kanedias.vanilla.audiotag;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -43,16 +42,18 @@ import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
 import com.kanedias.vanilla.audiotag.misc.HintSpinnerAdapter;
-
 import com.kanedias.vanilla.plugins.DialogActivity;
 import com.kanedias.vanilla.plugins.PluginUtils;
+
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.id3.ID3v22Tag;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
-import static com.kanedias.vanilla.plugins.PluginConstants.*;
+import static com.kanedias.vanilla.plugins.PluginConstants.ACTION_LAUNCH_PLUGIN;
+import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_P2P;
+import static com.kanedias.vanilla.plugins.PluginConstants.LOG_TAG;
 
 /**
  * Main activity of Tag Editor plugin. This will be presented as a dialog to the user
@@ -103,13 +104,13 @@ public class TagEditActivity extends DialogActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tag_edit);
 
-        mTitleEdit = (EditText) findViewById(R.id.song_title_edit);
-        mArtistEdit = (EditText) findViewById(R.id.song_artist_edit);
-        mAlbumEdit = (EditText) findViewById(R.id.song_album_edit);
-        mCustomTagSelector = (Spinner) findViewById(R.id.song_custom_tag_selector);
-        mCustomTagEdit = (EditText) findViewById(R.id.song_custom_tag_edit);
-        mConfirm = (Button) findViewById(R.id.confirm_tags_button);
-        mCancel = (Button) findViewById(R.id.cancel_tags_button);
+        mTitleEdit = findViewById(R.id.song_title_edit);
+        mArtistEdit = findViewById(R.id.song_artist_edit);
+        mAlbumEdit = findViewById(R.id.song_album_edit);
+        mCustomTagSelector = findViewById(R.id.song_custom_tag_selector);
+        mCustomTagEdit = findViewById(R.id.song_custom_tag_edit);
+        mConfirm = findViewById(R.id.confirm_tags_button);
+        mCancel = findViewById(R.id.cancel_tags_button);
 
         setupUI();
     }
@@ -145,18 +146,10 @@ public class TagEditActivity extends DialogActivity {
      * Initialize UI elements with handlers and action listeners
      */
     private void setupUI() {
-        mCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-        mConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mService.writeFile();
-                finish();
-            }
+        mCancel.setOnClickListener(v -> finish());
+        mConfirm.setOnClickListener(v -> {
+            mService.writeFile();
+            finish();
         });
 
         SpinnerAdapter origAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, FieldKey.values());
@@ -241,12 +234,9 @@ public class TagEditActivity extends DialogActivity {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.re_tag)
                     .setMessage(R.string.id3_v22_to_v24)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            mService.upgradeID3v2();
-                            mTag = mService.getTag(); // tag was updated, refresh it from service
-                        }
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                        mService.upgradeID3v2();
+                        mTag = mService.getTag(); // tag was updated, refresh it from service
                     })
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
@@ -286,12 +276,10 @@ public class TagEditActivity extends DialogActivity {
 
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
         }
 
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
-
         }
 
         @Override

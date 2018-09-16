@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-          android:id="@android:id/text1"
-          style="?android:attr/dropDownItemStyle"
-          android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
-          android:maxLines="1"
-          android:text="@string/select_custom_tag"
-          android:textColor="@android:color/darker_gray"
-          android:layout_width="match_parent"
-          android:layout_height="?android:attr/listPreferredItemHeight"
-          android:ellipsize="marquee" />
+    android:id="@android:id/text1"
+    style="?android:attr/dropDownItemStyle"
+    android:layout_width="match_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:ellipsize="marquee"
+    android:singleLine="true"
+    android:text="@string/select_custom_tag"
+    android:textAppearance="?android:attr/textAppearanceLargePopupMenu"
+    android:textColor="@android:color/darker_gray" />
