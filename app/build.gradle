@@ -1,18 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '26.0.2'
-
-    lintOptions {
-        disable 'MissingTranslation'
-        disable 'ExtraTranslation'
-    }
+    compileSdkVersion 28
+    buildToolsVersion '28.0.2'
 
     defaultConfig {
         applicationId "com.kanedias.vanilla.audiotag"
         minSdkVersion 14
-        targetSdkVersion 25
+        targetSdkVersion 28
         versionCode 15
         versionName "1.2.6"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -28,24 +23,30 @@ android {
     }
 
     buildTypes {
-        debug {
-        }
+        debug {}
 
         release {
-            zipAlignEnabled true
+			signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
-            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
+    lintOptions {
+        disable 'MissingTranslation'
+        disable 'ExtraTranslation'
+    }
 }
 
 dependencies {
     // SAF storage access utilities
-    compile project(':plugin-commons')
+    implementation project(':plugin-commons')
     // build from https://bitbucket.org/ijabz/jaudiotagger (LGPL)
-    compile 'com.github.Adonai:jaudiotagger-android:2.2.6-6-kanedias'
+    implementation 'com.github.Adonai:jaudiotagger-android:2.2.6-6-kanedias'
 }

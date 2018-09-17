@@ -16,17 +16,9 @@
  */
 package com.kanedias.vanilla.audiotag;
 
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
-
-import org.jaudiotagger.audio.AudioFile;
-
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-
 /**
  * Compat utilities mostly
  *
@@ -47,6 +39,4 @@ public class TagEditorUtils {
         stream.close();
         return baos.toByteArray();
     }
-
-
 }
