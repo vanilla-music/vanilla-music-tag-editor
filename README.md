@@ -21,7 +21,7 @@ Once both player and this plugin are installed, request a context menu from libr
 
 # License
 
-    Copyright (C) 2016 Oleg "Kanedias" Chernovskiy
+    Copyright (C) 2016-2018 Oleg "Kanedias" Chernovskiy
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

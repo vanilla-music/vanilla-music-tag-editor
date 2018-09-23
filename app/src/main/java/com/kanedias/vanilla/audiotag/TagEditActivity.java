@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Oleg Chernovskiy <adonai@xaker.ru>
+ * Copyright (C) 2016-2018 Oleg Chernovskiy <adonai@xaker.ru>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,8 @@ package com.kanedias.vanilla.audiotag;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -51,17 +47,13 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.id3.ID3v22Tag;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
-import static com.kanedias.vanilla.plugins.PluginConstants.ACTION_LAUNCH_PLUGIN;
-import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_P2P;
-import static com.kanedias.vanilla.plugins.PluginConstants.LOG_TAG;
+import static com.kanedias.vanilla.plugins.PluginConstants.*;
 
 /**
  * Main activity of Tag Editor plugin. This will be presented as a dialog to the user
  * if one chooses it as the requested plugin.
  * <p/>
  * After tag editing is done, this activity updates media info of this file and exits.
- *
- * @see PluginService service that launches this
  *
  * @author Oleg Chernovskiy
  */
@@ -76,28 +68,7 @@ public class TagEditActivity extends DialogActivity {
     private EditText mCustomTagEdit;
     private Button mConfirm, mCancel;
 
-    private PluginService mService;
-    private Tag mTag;
-
-    private ServiceConnection mServiceConn = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            if (service == null) { // couldn't load file
-                finish();
-                return;
-            }
-
-            mService = ((PluginService.PluginBinder) service).getService();
-            mTag = mService.getTag();
-            fillInitialValues();
-            miscellaneousChecks();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mService = null;
-        }
-    };
+    private PluginTagWrapper mWrapper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,15 +83,10 @@ public class TagEditActivity extends DialogActivity {
         mConfirm = findViewById(R.id.confirm_tags_button);
         mCancel = findViewById(R.id.cancel_tags_button);
 
-        setupUI();
-    }
+        mWrapper = new PluginTagWrapper(getIntent(), this);
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mService != null) {
-            unbindService(mServiceConn);
-        }
+        handleLaunchPlugin();
+        setupUI();
     }
 
     @Override
@@ -134,8 +100,7 @@ public class TagEditActivity extends DialogActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.reload_option:
-                mService.loadFile(true);
-                mTag = mService.getTag();
+                mWrapper.loadFile(true);
                 fillInitialValues();
                 return true;
         }
@@ -148,7 +113,7 @@ public class TagEditActivity extends DialogActivity {
     private void setupUI() {
         mCancel.setOnClickListener(v -> finish());
         mConfirm.setOnClickListener(v -> {
-            mService.writeFile();
+            mWrapper.writeFile();
             finish();
         });
 
@@ -167,7 +132,7 @@ public class TagEditActivity extends DialogActivity {
                 }
 
                 mCustomTagEdit.removeTextChangedListener(mCustomFieldListener); // don't trigger old field rewrite
-                mCustomTagEdit.setText(mTag.getFirst(key));
+                mCustomTagEdit.setText(mWrapper.getTag().getFirst(key));
                 mCustomFieldListener = new FieldKeyListener(key);
                 mCustomTagEdit.addTextChangedListener(mCustomFieldListener); // re-register with new field
             }
@@ -199,28 +164,47 @@ public class TagEditActivity extends DialogActivity {
 
         if (getIntent().hasExtra(EXTRA_PARAM_P2P)) {
             // if we're here, then user didn't grant tag editor "write to SD" permission before
-            // and service passed P2P intent to activity in hope that it will sort it out.
-            // We need to pass this intent back to service as user had approved permission request
-            Intent serviceStart = new Intent(this, PluginService.class);
-            serviceStart.setAction(ACTION_LAUNCH_PLUGIN);
-            serviceStart.putExtras(getIntent());
-            startService(serviceStart); // pass intent back to the service
+            // We need to handle this intent again
+            handleLaunchPlugin();
+            return;
+        }
+
+        // if we're here the user requested the tag editor directly
+        mWrapper.loadFile(true);
+        fillInitialValues();
+        miscellaneousChecks();
+    }
+
+    private void handleLaunchPlugin() {
+        if (TextUtils.equals(getIntent().getAction(), ACTION_WAKE_PLUGIN)) {
+            // just show that we're okay
+            Log.i(LOG_TAG, "Plugin enabled!");
             finish();
-        } else {
-            // it's non-P2P intent, prepare interaction and fire full-blown activity window
-            // we'll need service at hand while editing
-            Intent bind = new Intent(this, PluginService.class);
-            bindService(bind, mServiceConn, 0);
+        }
+
+        if (getIntent().hasExtra(EXTRA_PARAM_SAF_P2P)) {
+            // it's SAF intent that is returned from SAF activity, should have URI inside
+            mWrapper.persistThroughSaf(getIntent());
+            finish();
+            return;
+        }
+
+        // if it's P2P intent, just try to read/write file as requested
+        if (PluginUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && getIntent().hasExtra(EXTRA_PARAM_P2P)) {
+            if(mWrapper.loadFile(false)) {
+                mWrapper.handleP2pIntent();
+            }
+            finish();
         }
     }
 
     /**
-     * Fills UI with initial values from loaded file. At this point {@link #mTag} must be initialized.
+     * Fills UI with initial values from loaded file.
      */
     private void fillInitialValues() {
-        mTitleEdit.setText(mTag.getFirst(FieldKey.TITLE));
-        mArtistEdit.setText(mTag.getFirst(FieldKey.ARTIST));
-        mAlbumEdit.setText(mTag.getFirst(FieldKey.ALBUM));
+        mTitleEdit.setText(mWrapper.getTag().getFirst(FieldKey.TITLE));
+        mArtistEdit.setText(mWrapper.getTag().getFirst(FieldKey.ARTIST));
+        mAlbumEdit.setText(mWrapper.getTag().getFirst(FieldKey.ALBUM));
         mCustomTagSelector.setSelection(0);
         mCustomTagEdit.setText("");
     }
@@ -230,14 +214,11 @@ public class TagEditActivity extends DialogActivity {
      */
     private void miscellaneousChecks() {
         // check we need a re-tag
-        if (mTag instanceof ID3v22Tag) {
+        if (mWrapper.getTag() instanceof ID3v22Tag) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.re_tag)
                     .setMessage(R.string.id3_v22_to_v24)
-                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                        mService.upgradeID3v2();
-                        mTag = mService.getTag(); // tag was updated, refresh it from service
-                    })
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> mWrapper.upgradeID3v2())
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
         }
@@ -285,7 +266,7 @@ public class TagEditActivity extends DialogActivity {
         @Override
         public void afterTextChanged(Editable s) {
             try {
-                mTag.setField(key, s.toString());
+                mWrapper.getTag().setField(key, s.toString());
             } catch (FieldDataInvalidException e) {
                 // should not happen
                 Log.e(LOG_TAG, "Error writing tag", e);
