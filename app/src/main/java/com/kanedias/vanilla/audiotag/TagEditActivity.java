@@ -43,7 +43,6 @@ import com.kanedias.vanilla.plugins.PluginUtils;
 
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
-import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.id3.ID3v22Tag;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -52,6 +51,30 @@ import static com.kanedias.vanilla.plugins.PluginConstants.*;
 /**
  * Main activity of Tag Editor plugin. This will be presented as a dialog to the user
  * if one chooses it as the requested plugin.
+ *
+ * This activity must be able to handle ACTION_WAKE_PLUGIN and ACTION_LAUNCH_PLUGIN
+ * intents coming from VanillaMusic. In case these intents are coming from other plugins
+ * the activity must try to just silently do required operations without showing actual
+ * activity window.
+ *
+ * <p/>
+ * Casual conversation looks like this:
+ * <pre>
+ *     VanillaMusic                                 Plugin
+ *          |                                         |
+ *          |       ACTION_WAKE_PLUGIN broadcast      |
+ *          |---------------------------------------->| (plugin init if just installed)
+ *          |                                         |
+ *          | ACTION_REQUEST_PLUGIN_PARAMS broadcast  |
+ *          |---------------------------------------->| (this is handled by BroadcastReceiver)
+ *          |                                         |
+ *          |      ACTION_HANDLE_PLUGIN_PARAMS        |
+ *          |<----------------------------------------| (plugin answer with name and desc)
+ *          |                                         |
+ *          |           ACTION_LAUNCH_PLUGIN          |
+ *          |---------------------------------------->| (plugin is allowed to show window)
+ * </pre>
+ *
  * <p/>
  * After tag editing is done, this activity updates media info of this file and exits.
  *

@@ -26,16 +26,18 @@ import com.kanedias.vanilla.plugins.PluginConstants;
 import static com.kanedias.vanilla.plugins.PluginConstants.*;
 
 /**
- * Broadcast receiver used for retrieving query intents
+ * Broadcast receiver used for retrieving query intents. This is primarily used to retrieve initial data about
+ * plugins from within Vanilla Music.
  *
  * @see PluginConstants
  */
 public class PluginQueryBroadcastReceiver extends BroadcastReceiver {
 
     /**
-     * Just starts the service. We need a broadcast receiver for this, as ordinary intents
-     * are targeted-only. Only query intents will come here, as "plugin launch" intents are targeted
+     * Just answer with plugin parameters. We need a broadcast receiver for this, as ordinary intents
+     * are targeted-only. Only query intents will come here, as "plugin launch" intents will already be targeted
      * and thus don't need a broadcast receiver to reach service.
+     *
      * @param context context this receiver operates in
      * @param intent incoming query intent
      */

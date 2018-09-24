@@ -77,26 +77,8 @@ import static com.kanedias.vanilla.plugins.PluginConstants.P2P_WRITE_TAG;
 import static com.kanedias.vanilla.plugins.PluginConstants.PREF_SDCARD_URI;
 
 /**
- * Main service of Plugin system.
- * This service must be able to handle ACTION_WAKE_PLUGIN, ACTION_REQUEST_PLUGIN_PARAMS and ACTION_LAUNCH_PLUGIN
- * intents coming from VanillaMusic.
- * <p/>
- * Casual conversation looks like this:
- * <pre>
- *     VanillaMusic                                 Plugin
- *          |                                         |
- *          |       ACTION_WAKE_PLUGIN broadcast      |
- *          |---------------------------------------->| (plugin init if just installed)
- *          |                                         |
- *          | ACTION_REQUEST_PLUGIN_PARAMS broadcast  |
- *          |---------------------------------------->| (this is handled by BroadcastReceiver first)
- *          |                                         |
- *          |      ACTION_HANDLE_PLUGIN_PARAMS        |
- *          |<----------------------------------------| (plugin answer with name and desc)
- *          |                                         |
- *          |           ACTION_LAUNCH_PLUGIN          |
- *          |---------------------------------------->| (plugin is allowed to show window)
- * </pre>
+ * Main worker of Plugin system. Handles all audio-file work, including loading and parsing audio file,
+ * writing it through both filesystem and SAF, upgrade of outdated tags.
  *
  * @see PluginConstants
  * @see TagEditActivity
