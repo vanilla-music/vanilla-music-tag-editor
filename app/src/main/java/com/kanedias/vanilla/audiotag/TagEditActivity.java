@@ -202,6 +202,10 @@ public class TagEditActivity extends DialogActivity {
         miscellaneousChecks();
     }
 
+    /**
+     * Handle incoming intent that may possible be ping, other plugin request or user-interactive plugin request
+     * @return true if intent was handled internally, false if activity startup is required
+     */
     private boolean handleLaunchPlugin() {
         if (TextUtils.equals(getIntent().getAction(), ACTION_WAKE_PLUGIN)) {
             // just show that we're okay
