@@ -206,15 +206,11 @@ public class TagEditActivity extends DialogActivity {
             return;
         }
 
-        if (getIntent().hasExtra(EXTRA_PARAM_SAF_P2P)) {
-            // it's SAF intent that is returned from SAF activity, should have URI inside
-            mWrapper.persistThroughSaf(getIntent());
-            finish();
-            return;
-        }
+        boolean fromSaf = getIntent().hasExtra(EXTRA_PARAM_SAF_P2P); // returned from SAF activity
+        boolean fromPlugin = getIntent().hasExtra(EXTRA_PARAM_P2P); // requested from other plugin
 
         // if it's P2P intent, just try to read/write file as requested
-        if (PluginUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && getIntent().hasExtra(EXTRA_PARAM_P2P)) {
+        if (PluginUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && (fromSaf || fromPlugin)) {
             if(mWrapper.loadFile(false)) {
                 mWrapper.handleP2pIntent();
             }

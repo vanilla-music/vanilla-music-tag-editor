@@ -168,8 +168,10 @@ public class PluginTagWrapper {
             // request SAF permissions in SAF activity
             Intent safIntent = new Intent(context, SafRequestActivity.class);
             safIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            safIntent.putExtra(PluginConstants.EXTRA_PARAM_PLUGIN_APP, context.getApplicationInfo());
             safIntent.putExtras(mLaunchIntent);
+            // potentially replace original EXTRA_PARAM_PLUGIN_APP with our app info
+            // It's safe as write is final action and we don't need to send any answers afterwards
+            safIntent.putExtra(PluginConstants.EXTRA_PARAM_PLUGIN_APP, context.getApplicationInfo());
             context.startActivity(safIntent);
             // it will pass us URI back after the work is done
         } else {
