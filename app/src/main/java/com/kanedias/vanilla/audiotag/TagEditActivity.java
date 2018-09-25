@@ -203,6 +203,7 @@ public class TagEditActivity extends DialogActivity {
             // just show that we're okay
             Log.i(LOG_TAG, "Plugin enabled!");
             finish();
+            return;
         }
 
         if (getIntent().hasExtra(EXTRA_PARAM_SAF_P2P)) {

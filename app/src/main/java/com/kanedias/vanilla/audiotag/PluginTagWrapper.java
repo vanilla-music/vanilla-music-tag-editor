@@ -343,8 +343,9 @@ public class PluginTagWrapper {
 
                 Intent response = new Intent(ACTION_LAUNCH_PLUGIN);
                 response.putExtra(EXTRA_PARAM_P2P, P2P_READ_TAG);
-                response.setPackage(responseApp.packageName);
                 response.putExtra(EXTRA_PARAM_P2P_VAL, values);
+                response.putExtras(mLaunchIntent); // return back everything we've got
+                response.setPackage(responseApp.packageName);
                 context.startActivity(response);
                 break;
             }
