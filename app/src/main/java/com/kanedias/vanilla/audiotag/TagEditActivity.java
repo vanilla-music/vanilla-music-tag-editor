@@ -96,6 +96,13 @@ public class TagEditActivity extends DialogActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mWrapper = new PluginTagWrapper(getIntent(), this);
+        if (handleLaunchPlugin()) {
+            // no UI was required for handling the intent
+            return;
+        }
+
         setContentView(R.layout.activity_tag_edit);
 
         mTitleEdit = findViewById(R.id.song_title_edit);
@@ -106,9 +113,6 @@ public class TagEditActivity extends DialogActivity {
         mConfirm = findViewById(R.id.confirm_tags_button);
         mCancel = findViewById(R.id.cancel_tags_button);
 
-        mWrapper = new PluginTagWrapper(getIntent(), this);
-
-        handleLaunchPlugin();
         setupUI();
     }
 
@@ -198,12 +202,12 @@ public class TagEditActivity extends DialogActivity {
         miscellaneousChecks();
     }
 
-    private void handleLaunchPlugin() {
+    private boolean handleLaunchPlugin() {
         if (TextUtils.equals(getIntent().getAction(), ACTION_WAKE_PLUGIN)) {
             // just show that we're okay
             Log.i(LOG_TAG, "Plugin enabled!");
             finish();
-            return;
+            return true;
         }
 
         boolean fromSaf = getIntent().hasExtra(EXTRA_PARAM_SAF_P2P); // returned from SAF activity
@@ -215,7 +219,11 @@ public class TagEditActivity extends DialogActivity {
                 mWrapper.handleP2pIntent();
             }
             finish();
+            return true;
         }
+
+        // continue startup
+        return false;
     }
 
     /**

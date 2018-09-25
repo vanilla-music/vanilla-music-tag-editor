@@ -36,7 +36,7 @@ public class PluginQueryBroadcastReceiver extends BroadcastReceiver {
     /**
      * Just answer with plugin parameters. We need a broadcast receiver for this, as ordinary intents
      * are targeted-only. Only query intents will come here, as "plugin launch" intents will already be targeted
-     * and thus don't need a broadcast receiver to reach service.
+     * and thus don't need a broadcast receiver to reach activity.
      *
      * @param context context this receiver operates in
      * @param intent incoming query intent
