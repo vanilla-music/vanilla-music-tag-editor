@@ -389,6 +389,7 @@ public class PluginTagWrapper {
                     // share uri if created successfully
                     Intent response = new Intent(ACTION_LAUNCH_PLUGIN);
                     response.putExtra(EXTRA_PARAM_P2P, P2P_READ_ART);
+                    response.putExtras(mLaunchIntent); // return back everything we've got
                     response.setPackage(responseApp.packageName);
                     if (uri != null) {
                         context.grantUriPermission(responseApp.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
