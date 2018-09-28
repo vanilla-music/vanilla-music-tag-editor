@@ -18,6 +18,7 @@ package com.kanedias.vanilla.audiotag;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -140,8 +141,10 @@ public class TagEditActivity extends DialogActivity {
     private void setupUI() {
         mCancel.setOnClickListener(v -> finish());
         mConfirm.setOnClickListener(v -> {
-            mWrapper.writeFile();
-            finish();
+            boolean done = mWrapper.writeFile();
+            if (done) {
+                finish();
+            }
         });
 
         SpinnerAdapter origAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, FieldKey.values());
@@ -214,15 +217,16 @@ public class TagEditActivity extends DialogActivity {
             return true;
         }
 
-        boolean fromSaf = getIntent().hasExtra(EXTRA_PARAM_SAF_P2P); // returned from SAF activity
         boolean fromPlugin = getIntent().hasExtra(EXTRA_PARAM_P2P); // requested from other plugin
-
-        // if it's P2P intent, just try to read/write file as requested
-        if (PluginUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && (fromSaf || fromPlugin)) {
+        if (PluginUtils.havePermissions(this, WRITE_EXTERNAL_STORAGE) && fromPlugin) {
+            // it's P2P intent, just try to read/write file as requested
             if(mWrapper.loadFile(false)) {
                 mWrapper.handleP2pIntent();
             }
-            finish();
+
+            if (!mWrapper.isWaitingSafResponse()) {
+                finish();
+            }
             return true;
         }
 
@@ -277,6 +281,14 @@ public class TagEditActivity extends DialogActivity {
                 finish(); // user denied our request, don't bother again on resume
             }
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // handle SAF response
+        mWrapper.onActivityResult(requestCode, resultCode, data);
     }
 
     private final class FieldKeyListener implements TextWatcher {

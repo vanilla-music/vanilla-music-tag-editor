@@ -16,7 +16,7 @@
  */
 package com.kanedias.vanilla.audiotag;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -31,7 +31,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.kanedias.vanilla.plugins.PluginConstants;
-import com.kanedias.vanilla.plugins.saf.SafRequestActivity;
+import com.kanedias.vanilla.plugins.PluginUtils;
+import com.kanedias.vanilla.plugins.saf.SafPermissionHandler;
 import com.kanedias.vanilla.plugins.saf.SafUtils;
 
 import org.jaudiotagger.audio.AudioFile;
@@ -67,7 +68,6 @@ import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_P2P;
 import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_P2P_KEY;
 import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_P2P_VAL;
 import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_PLUGIN_APP;
-import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_SAF_P2P;
 import static com.kanedias.vanilla.plugins.PluginConstants.EXTRA_PARAM_URI;
 import static com.kanedias.vanilla.plugins.PluginConstants.LOG_TAG;
 import static com.kanedias.vanilla.plugins.PluginConstants.P2P_READ_ART;
@@ -88,22 +88,45 @@ import static com.kanedias.vanilla.plugins.PluginConstants.PREF_SDCARD_URI;
 public class PluginTagWrapper {
 
     private SharedPreferences mPrefs;
+    private SafPermissionHandler mSafHandler;
 
-    private Context context;
+    private Activity mContext;
     private Intent mLaunchIntent;
     private AudioFile mAudioFile;
     private Tag mTag;
 
-    public PluginTagWrapper(Intent intent, Context ctx) {
-        context = ctx;
+    private boolean waitingSafResponse = false;
+
+    public PluginTagWrapper(Intent intent, Activity ctx) {
+        mContext = ctx;
         mLaunchIntent = intent;
 
+        mSafHandler = new SafPermissionHandler(mContext);
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+
         TagOptionSingleton.getInstance().setAndroid(true);
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
     }
 
     public Tag getTag() {
         return mTag;
+    }
+
+    public boolean isWaitingSafResponse() {
+        return waitingSafResponse;
+    }
+
+    /**
+     * @see SafPermissionHandler#onActivityResult(int, int, Intent)
+     */
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (mSafHandler.onActivityResult(requestCode, resultCode, data)) {
+            waitingSafResponse = false;
+
+            // continue persisting through SAF
+            if (persistThroughSaf(data)) {
+                mContext.finish();
+            }
+        }
     }
 
     /**
@@ -118,7 +141,7 @@ public class PluginTagWrapper {
 
         // we need only path passed to us
         Uri fileUri = mLaunchIntent.getParcelableExtra(EXTRA_PARAM_URI);
-        if (fileUri == null) {
+        if (fileUri == null || fileUri.getPath() == null) {
             return false;
         }
 
@@ -132,9 +155,9 @@ public class PluginTagWrapper {
             mTag = mAudioFile.getTagOrCreateAndSetDefault();
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
             Log.e(LOG_TAG,
-                    String.format(context.getString(R.string.error_audio_file), file.getAbsolutePath()), e);
-            Toast.makeText(context,
-                    String.format(context.getString(R.string.error_audio_file) + ", %s",
+                    String.format(mContext.getString(R.string.error_audio_file), file.getAbsolutePath()), e);
+            Toast.makeText(mContext,
+                    String.format(mContext.getString(R.string.error_audio_file) + ", %s",
                             file.getAbsolutePath(),
                             e.getLocalizedMessage()),
                     Toast.LENGTH_SHORT).show();
@@ -156,26 +179,24 @@ public class PluginTagWrapper {
 
     /**
      * Writes file to backing filesystem provider, this may be either SAF-managed sdcard or internal storage.
+     * @return true if file was written successfully, false otherwise
      */
-    public void writeFile() {
-        if (SafUtils.isSafNeeded(mAudioFile.getFile(), context)) {
+    public boolean writeFile() {
+        if (SafUtils.isSafNeeded(mAudioFile.getFile(), mContext)) {
             if (mPrefs.contains(PREF_SDCARD_URI)) {
                 // we already got the permission!
-                persistThroughSaf(null);
-                return;
+                return persistThroughSaf(null);
             }
 
-            // request SAF permissions in SAF activity
-            Intent safIntent = new Intent(context, SafRequestActivity.class);
-            safIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            safIntent.putExtras(mLaunchIntent);
-            // potentially replace original EXTRA_PARAM_PLUGIN_APP with our app info
-            // It's safe as write is final action and we don't need to send any answers afterwards
-            safIntent.putExtra(PluginConstants.EXTRA_PARAM_PLUGIN_APP, context.getApplicationInfo());
-            context.startActivity(safIntent);
-            // it will pass us URI back after the work is done
+            // request SAF permissions, handle in activity
+            mSafHandler.handleFile(mAudioFile.getFile());
+            waitingSafResponse = true;
+
+            // we didn't write the file, don't close the window
+            return false;
         } else {
             persistThroughFile();
+            return true;
         }
     }
 
@@ -186,16 +207,16 @@ public class PluginTagWrapper {
     private void persistThroughFile() {
         try {
             AudioFileIO.write(mAudioFile);
-            Toast.makeText(context, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
 
             // update media database
             File persisted = mAudioFile.getFile();
-            MediaScannerConnection.scanFile(context, new String[]{persisted.getAbsolutePath()}, null, null);
+            MediaScannerConnection.scanFile(mContext, new String[]{persisted.getAbsolutePath()}, null, null);
         } catch (CannotWriteException e) {
             Log.e(LOG_TAG,
-                    String.format(context.getString(R.string.error_audio_file), mAudioFile.getFile().getPath()), e);
-            Toast.makeText(context,
-                    String.format(context.getString(R.string.error_audio_file) + ", %s",
+                    String.format(mContext.getString(R.string.error_audio_file), mAudioFile.getFile().getPath()), e);
+            Toast.makeText(mContext,
+                    String.format(mContext.getString(R.string.error_audio_file) + ", %s",
                             mAudioFile.getFile().getPath(),
                             e.getLocalizedMessage()),
                     Toast.LENGTH_LONG).show();
@@ -204,9 +225,10 @@ public class PluginTagWrapper {
 
     /**
      * Write changes through SAF framework - the only way to do it in Android > 4.4 when working with SD card
-     * @param activityResponse response with URI contained in. Can be null if tree permission is already given.
+     * @param safResponse response with URI contained in. Can be null if tree permission is already given.
+     * @return true if file was written successfully, false otherwise
      */
-    public void persistThroughSaf(Intent activityResponse) {
+    public boolean persistThroughSaf(Intent safResponse) {
         Uri safUri;
         if (mPrefs.contains(PREF_SDCARD_URI)) {
             // no sorcery can allow you to gain URI to the document representing file you've been provided with
@@ -215,16 +237,22 @@ public class PluginTagWrapper {
             // /storage/volume/Music/some.mp3 will become [storage, volume, music, some.mp3]
             List<String> pathSegments = new ArrayList<>(Arrays.asList(mAudioFile.getFile().getAbsolutePath().split("/")));
             Uri allowedSdRoot = Uri.parse(mPrefs.getString(PREF_SDCARD_URI, ""));
-            safUri = findInDocumentTree(DocumentFile.fromTreeUri(context, allowedSdRoot), pathSegments);
+            DocumentFile doc = DocumentFile.fromTreeUri(mContext, allowedSdRoot);
+            if (doc == null) {
+                // provided on API >= 21 but now on API 19? Shouldn't happen
+                Toast.makeText(mContext, mContext.getString(R.string.saf_write_error) + allowedSdRoot, Toast.LENGTH_LONG).show();
+                mPrefs.edit().remove(PREF_SDCARD_URI).apply();
+                return false;
+            }
+            safUri = findInDocumentTree(doc, pathSegments);
         } else {
-            Intent originalSafResponse = activityResponse.getParcelableExtra(EXTRA_PARAM_SAF_P2P);
-            safUri = originalSafResponse.getData();
+            safUri = safResponse.getData();
         }
 
         if (safUri == null) {
             // nothing selected or invalid file?
-            Toast.makeText(context, R.string.saf_nothing_selected, Toast.LENGTH_LONG).show();
-            return;
+            Toast.makeText(mContext, R.string.saf_nothing_selected, Toast.LENGTH_LONG).show();
+            return false;
         }
 
         try {
@@ -239,30 +267,33 @@ public class PluginTagWrapper {
             AudioFileIO.write(mAudioFile);
 
             // retrieve FD from SAF URI
-            ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(safUri, "rw");
+            ParcelFileDescriptor pfd = mContext.getContentResolver().openFileDescriptor(safUri, "rw");
             if (pfd == null) {
                 // should not happen
                 Log.e(LOG_TAG, "SAF provided incorrect URI!" + safUri);
-                return;
+                return false;
             }
 
             // now read persisted data and write it to real FD provided by SAF
             FileInputStream fis = new FileInputStream(temp);
-            byte[] audioContent = TagEditorUtils.readFully(fis);
+            byte[] audioContent = PluginUtils.readFully(fis);
             FileOutputStream fos = new FileOutputStream(pfd.getFileDescriptor());
             fos.write(audioContent);
             fos.close();
 
             // delete temporary file used
-            temp.delete();
+            if (!temp.delete()) {
+                Log.w(LOG_TAG, "Couldn't delete temporary file: " + temp);
+            }
 
             // rescan original file
-            MediaScannerConnection.scanFile(context, new String[]{original.getAbsolutePath()}, null, null);
-            Toast.makeText(context, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
+            MediaScannerConnection.scanFile(mContext, new String[]{original.getAbsolutePath()}, null, null);
+            Toast.makeText(mContext, R.string.file_written_successfully, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Toast.makeText(context, context.getString(R.string.saf_write_error) + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(mContext, mContext.getString(R.string.saf_write_error) + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             Log.e(LOG_TAG, "Failed to write to file descriptor provided by SAF!", e);
         }
+        return true;
     }
 
     /**
@@ -319,7 +350,7 @@ public class PluginTagWrapper {
                         mTag.setField(key, values[i]);
                     } catch (IllegalArgumentException iae) {
                         Log.e(LOG_TAG, "Invalid tag requested: " + fields[i], iae);
-                        Toast.makeText(context, R.string.invalid_tag_requested, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, R.string.invalid_tag_requested, Toast.LENGTH_SHORT).show();
                     } catch (FieldDataInvalidException e) {
                         // should not happen
                         Log.e(LOG_TAG, "Error writing tag", e);
@@ -339,7 +370,7 @@ public class PluginTagWrapper {
                         values[i] = mTag.getFirst(key);
                     } catch (IllegalArgumentException iae) {
                         Log.e(LOG_TAG, "Invalid tag requested: " + fields[i], iae);
-                        Toast.makeText(context, R.string.invalid_tag_requested, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, R.string.invalid_tag_requested, Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -348,7 +379,7 @@ public class PluginTagWrapper {
                 response.putExtra(EXTRA_PARAM_P2P_VAL, values);
                 response.putExtras(mLaunchIntent); // return back everything we've got
                 response.setPackage(responseApp.packageName);
-                context.startActivity(response);
+                mContext.startActivity(response);
                 break;
             }
             case P2P_READ_ART: {
@@ -361,9 +392,9 @@ public class PluginTagWrapper {
                         break;
                     }
 
-                    File coversDir = new File(context.getCacheDir(), "covers");
+                    File coversDir = new File(mContext.getCacheDir(), "covers");
                     if (!coversDir.exists() && !coversDir.mkdir()) {
-                        Log.e(LOG_TAG, "Couldn't create dir for covers! Path " + context.getCacheDir());
+                        Log.e(LOG_TAG, "Couldn't create dir for covers! Path " + mContext.getCacheDir());
                         break;
                     }
 
@@ -381,10 +412,10 @@ public class PluginTagWrapper {
                     fos.close();
 
                     // create sharable uri
-                    uri = FileProvider.getUriForFile(context, "com.kanedias.vanilla.audiotag.fileprovider", coverTmpFile);
+                    uri = FileProvider.getUriForFile(mContext, "com.kanedias.vanilla.audiotag.fileprovider", coverTmpFile);
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "Couldn't write to cache file", e);
-                    Toast.makeText(context, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                 } finally {
                     // share uri if created successfully
                     Intent response = new Intent(ACTION_LAUNCH_PLUGIN);
@@ -392,10 +423,10 @@ public class PluginTagWrapper {
                     response.putExtras(mLaunchIntent); // return back everything we've got
                     response.setPackage(responseApp.packageName);
                     if (uri != null) {
-                        context.grantUriPermission(responseApp.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        mContext.grantUriPermission(responseApp.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         response.putExtra(EXTRA_PARAM_P2P_VAL, uri);
                     }
-                    context.startActivity(response);
+                    mContext.startActivity(response);
                 }
                 break;
             }
@@ -403,13 +434,13 @@ public class PluginTagWrapper {
                 Uri imgLink = mLaunchIntent.getParcelableExtra(EXTRA_PARAM_P2P_VAL);
 
                 try {
-                    ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(imgLink, "r");
+                    ParcelFileDescriptor pfd = mContext.getContentResolver().openFileDescriptor(imgLink, "r");
                     if (pfd == null) {
                         return;
                     }
 
                     FileInputStream fis = new FileInputStream(pfd.getFileDescriptor());
-                    byte[] imgBytes = TagEditorUtils.readFully(fis);
+                    byte[] imgBytes = PluginUtils.readFully(fis);
 
                     Artwork cover = new AndroidArtwork();
                     cover.setBinaryData(imgBytes);
@@ -421,7 +452,7 @@ public class PluginTagWrapper {
                     mTag.setField(cover);
                 } catch (IOException | IllegalArgumentException | FieldDataInvalidException e) {
                     Log.e(LOG_TAG, "Invalid artwork!", e);
-                    Toast.makeText(context, R.string.invalid_artwork_provided, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, R.string.invalid_artwork_provided, Toast.LENGTH_SHORT).show();
                 }
 
                 writeFile();
