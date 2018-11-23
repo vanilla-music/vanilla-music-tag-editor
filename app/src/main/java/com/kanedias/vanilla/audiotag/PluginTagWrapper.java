@@ -168,11 +168,11 @@ public class PluginTagWrapper {
     }
 
     /**
-     * upgrades ID3v2.x tag to ID3v2.4 for loaded file.
+     * upgrades ID3v2.x tag to ID3v2.3 for loaded file.
      * Call this method only if you know exactly that file contains ID3 tag.
      */
     public void upgradeID3v2() {
-        mTag = mAudioFile.convertID3Tag((AbstractID3v2Tag) mTag, ID3V2Version.ID3_V24);
+        mTag = mAudioFile.convertID3Tag((AbstractID3v2Tag) mTag, ID3V2Version.ID3_V23);
         mAudioFile.setTag(mTag);
         writeFile();
     }

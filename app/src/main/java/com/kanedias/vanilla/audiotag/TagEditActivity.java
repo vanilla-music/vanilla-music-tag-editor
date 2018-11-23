@@ -203,6 +203,7 @@ public class TagEditActivity extends DialogActivity {
         mWrapper.loadFile(true);
         fillInitialValues();
         miscellaneousChecks();
+        miscellaneousChecks2();
     }
 
     /**
@@ -253,7 +254,19 @@ public class TagEditActivity extends DialogActivity {
         if (mWrapper.getTag() instanceof ID3v22Tag) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.re_tag)
-                    .setMessage(R.string.id3_v22_to_v24)
+                    .setMessage(R.string.id3_v22_to_v23)
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> mWrapper.upgradeID3v2())
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        }
+    }
+
+    private void miscellaneousChecks2() {
+        // check we need a re-tag
+        if (mWrapper.getTag() instanceof ID3v24Tag) {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.re_tag)
+                    .setMessage(R.string.id3_v24_to_v23)
                     .setPositiveButton(android.R.string.ok, (dialog, which) -> mWrapper.upgradeID3v2())
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
