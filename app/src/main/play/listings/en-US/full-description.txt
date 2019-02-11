@@ -1,0 +1,17 @@
+This app is a plugin.
+
+
+Prior to use it you should have
+<a href="https://play.google.com/store/apps/details?id=ch.blinkenlights.android.vanilla">Vanilla Music</a> installed.
+Once both player and this plugin are installed, request a context menu on a song from library screen, select "Plugins" and "Tag editor" afterwards.
+
+Features
+
+* Tag editing of multiple audiofile formats (mp3/ogg/flac/m4a)
+* Custom tag editing (lyrics, track no, comment etc.)
+* Lightweight (640 KB in release apk)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
