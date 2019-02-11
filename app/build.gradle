@@ -3,7 +3,6 @@ apply plugin: 'com.github.triplet.play'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.2'
 
     defaultConfig {
         applicationId "com.kanedias.vanilla.audiotag"
@@ -46,11 +45,11 @@ android {
 }
 
 play {
-    jsonFile = file("misc/android-publisher-account.json")
+    serviceAccountCredentials = file("misc/android-publisher-account.json")
     track = 'production'
 }
 
 dependencies {
-    implementation project(':plugin-commons') // SAF storage access utilities
-    implementation 'com.github.Adonai:jaudiotagger-android:2.2.6-6-kanedias' // build from https://bitbucket.org/ijabz/jaudiotagger (LGPL)
+    implementation 'com.github.vanilla-music:vanilla-music-plugin-commons:1.0.1'
+    implementation 'com.github.Adonai:jaudiotagger-android:2.3.2'
 }
