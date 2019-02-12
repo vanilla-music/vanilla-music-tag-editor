@@ -8,55 +8,105 @@
     tools:context=".TagEditActivity">
 
     <ScrollView
+        android:id="@+id/parent_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
         <LinearLayout
+            android:id="@+id/tag_edit_area"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:id="@+id/tag_edit_area"
             android:layout_margin="12dp">
 
-            <EditText
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapWords"
-                android:maxLines="1"
-                android:selectAllOnFocus="true"
-                android:id="@+id/song_title_edit"
-                android:hint="@string/song_title"/>
+                android:layout_height="wrap_content">
 
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:id="@+id/song_artist_edit"
-                android:inputType="textCapWords"
-                android:maxLines="1"
-                android:selectAllOnFocus="true"
-                android:hint="@string/song_artist"/>
+                <TextView
+                    android:id="@+id/song_title_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginBottom="-12sp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_marginRight="6dp"
+                    android:text="@string/song_title"/>
 
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:id="@+id/song_album_edit"
-                android:inputType="textCapWords"
-                android:maxLines="1"
-                android:selectAllOnFocus="true"
-                android:hint="@string/song_album"/>
+                <EditText
+                    android:id="@+id/song_title_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/song_title_label"
+                    android:inputType="textCapWords"
+                    android:maxLines="1"
+                    android:selectAllOnFocus="true"/>
 
-            <Spinner
+            </RelativeLayout>
+
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:id="@+id/song_custom_tag_selector"/>
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/song_artist_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginBottom="-12sp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_marginRight="6dp"
+                    android:text="@string/song_artist"/>
+
+                <EditText
+                    android:id="@+id/song_artist_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/song_artist_label"
+                    android:inputType="textCapWords"
+                    android:maxLines="1"
+                    android:selectAllOnFocus="true" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/song_album_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginBottom="-12sp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_marginRight="6dp"
+                    android:text="@string/song_album"/>
+
+                <EditText
+                    android:id="@+id/song_album_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/song_album_label"
+                    android:inputType="textCapWords"
+                    android:maxLines="1"
+                    android:selectAllOnFocus="true"/>
+
+            </RelativeLayout>
 
         </LinearLayout>
 
     </ScrollView>
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:id="@+id/song_custom_tag_selector"/>
 
     <LinearLayout
         style="?android:attr/buttonBarStyle"

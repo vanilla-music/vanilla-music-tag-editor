@@ -27,9 +27,6 @@ android {
 
         release {
             signingConfig signingConfigs.release
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -50,6 +47,7 @@ play {
 }
 
 dependencies {
-    implementation 'com.github.vanilla-music:vanilla-music-plugin-commons:1.0.1'
-    implementation 'com.github.Adonai:jaudiotagger:2.3.3'
+    implementation 'com.github.vanilla-music:vanilla-music-plugin-commons:1.0.3'
+    implementation 'androidx.core:core:1.0.1'
+    implementation 'com.github.Adonai:jaudiotagger:2.3.4'
 }

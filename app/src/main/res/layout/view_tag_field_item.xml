@@ -1,7 +1,24 @@
-<EditText xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="5dp"
-    android:inputType="textCapWords"
-    android:maxLines="1"
-    android:selectAllOnFocus="true"/>
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/song_custom_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginEnd="6dp"
+        android:layout_marginRight="6dp"
+        android:layout_marginBottom="-12sp"/>
+
+    <EditText
+        android:id="@+id/song_custom_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/song_custom_label"
+        android:inputType="textCapWords"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"/>
+
+</RelativeLayout>

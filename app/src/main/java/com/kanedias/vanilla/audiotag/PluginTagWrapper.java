@@ -24,12 +24,12 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
-import android.support.v4.content.FileProvider;
-import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
+import androidx.documentfile.provider.DocumentFile;
 import com.kanedias.vanilla.plugins.PluginConstants;
 import com.kanedias.vanilla.plugins.PluginUtils;
 import com.kanedias.vanilla.plugins.saf.SafPermissionHandler;
@@ -412,7 +412,7 @@ public class PluginTagWrapper {
                     fos.close();
 
                     // create sharable uri
-                    uri = FileProvider.getUriForFile(mContext, "com.kanedias.vanilla.audiotag.fileprovider", coverTmpFile);
+                    uri = FileProvider.getUriForFile(mContext, BuildConfig.APPLICATION_ID + ".fileprovider", coverTmpFile);
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "Couldn't write to cache file", e);
                     Toast.makeText(mContext, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();

@@ -21,8 +21,6 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -31,6 +29,8 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.kanedias.vanilla.audiotag.misc.HintSpinnerAdapter;
 import com.kanedias.vanilla.plugins.DialogActivity;
 import com.kanedias.vanilla.plugins.PluginUtils;
@@ -82,6 +82,7 @@ public class TagEditActivity extends DialogActivity {
 
     private static final int PERMISSIONS_REQUEST_CODE = 0;
 
+    private ScrollView mParentScroll;
     private LinearLayout mTagArea;
     private EditText mTitleEdit;
     private EditText mArtistEdit;
@@ -104,6 +105,7 @@ public class TagEditActivity extends DialogActivity {
 
         setContentView(R.layout.activity_tag_edit);
 
+        mParentScroll = findViewById(R.id.parent_scroll);
         mTagArea = findViewById(R.id.tag_edit_area);
         mTitleEdit = findViewById(R.id.song_title_edit);
         mArtistEdit = findViewById(R.id.song_artist_edit);
@@ -192,11 +194,10 @@ public class TagEditActivity extends DialogActivity {
             return;
         }
 
-        EditText edit = (EditText) LayoutInflater.from(this)
-                .inflate(R.layout.view_tag_field_item, mTagArea, false);
+        View customLayout = LayoutInflater.from(this).inflate(R.layout.view_tag_field_item, mTagArea, false);
+        TextView label = customLayout.findViewById(R.id.song_custom_label);
+        EditText edit = customLayout.findViewById(R.id.song_custom_edit);
 
-        String name = capitalize(key.name().replace('_', ' ').toLowerCase());
-        edit.setHint(name);
         if (key == FieldKey.LYRICS) {
             edit.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
             edit.setSingleLine(false);
@@ -204,11 +205,12 @@ public class TagEditActivity extends DialogActivity {
             edit.setMaxLines(6);
         }
 
+        label.setText(capitalize(key.name().replace('_', ' ').toLowerCase()));
         edit.setText(mWrapper.getTag().getFirst(key));
         edit.addTextChangedListener(new FieldKeyListener(key));
 
-        // 3 is just after title, artist, album
-        mTagArea.addView(edit, 3);
+        mTagArea.addView(customLayout);
+        mParentScroll.fling(10_000);
     }
 
     public static String capitalize(String input) {

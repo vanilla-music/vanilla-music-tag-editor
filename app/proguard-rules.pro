@@ -18,3 +18,6 @@
 
 -keep class org.jaudiotagger.**  { *; }
 -dontwarn org.jaudiotagger.**
+
+-keep class org.jcodec.** { *; }
+-dontwarn org.jcodec.**
