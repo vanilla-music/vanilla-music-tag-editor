@@ -49,7 +49,7 @@ deploy:
     on:
       tags: true
   - provider: script
-    script: ./gradlew app:publishApkRelease
+    script: ./gradlew publish
     skip_cleanup: true
     on:
       tags: true

@@ -23,20 +23,12 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
-import android.widget.Toast;
+import android.view.*;
+import android.widget.*;
 
 import com.kanedias.vanilla.audiotag.misc.HintSpinnerAdapter;
 import com.kanedias.vanilla.plugins.DialogActivity;
@@ -85,11 +77,11 @@ public class TagEditActivity extends DialogActivity {
 
     private static final int PERMISSIONS_REQUEST_CODE = 0;
 
+    private LinearLayout mTagArea;
     private EditText mTitleEdit;
     private EditText mArtistEdit;
     private EditText mAlbumEdit;
     private Spinner mCustomTagSelector;
-    private EditText mCustomTagEdit;
     private Button mConfirm, mCancel;
 
     private PluginTagWrapper mWrapper;
@@ -106,11 +98,11 @@ public class TagEditActivity extends DialogActivity {
 
         setContentView(R.layout.activity_tag_edit);
 
+        mTagArea = findViewById(R.id.tag_edit_area);
         mTitleEdit = findViewById(R.id.song_title_edit);
         mArtistEdit = findViewById(R.id.song_artist_edit);
         mAlbumEdit = findViewById(R.id.song_album_edit);
         mCustomTagSelector = findViewById(R.id.song_custom_tag_selector);
-        mCustomTagEdit = findViewById(R.id.song_custom_tag_edit);
         mConfirm = findViewById(R.id.confirm_tags_button);
         mCancel = findViewById(R.id.cancel_tags_button);
 
@@ -161,16 +153,23 @@ public class TagEditActivity extends DialogActivity {
                     return;
                 }
 
-                mCustomTagEdit.removeTextChangedListener(mCustomFieldListener); // don't trigger old field rewrite
-                mCustomTagEdit.setText(mWrapper.getTag().getFirst(key));
+                EditText edit = (EditText) LayoutInflater.from(view.getContext())
+                        .inflate(R.layout.view_tag_field_item, mTagArea, true);
+
+                edit.setHint(key.name());
+                if (key == FieldKey.LYRICS) {
+                    edit.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+                    edit.setMaxLines(6);
+                }
+
+                edit.setText(mWrapper.getTag().getFirst(key));
                 mCustomFieldListener = new FieldKeyListener(key);
-                mCustomTagEdit.addTextChangedListener(mCustomFieldListener); // re-register with new field
+                edit.addTextChangedListener(new FieldKeyListener(key));
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                mCustomTagEdit.removeTextChangedListener(mCustomFieldListener); // don't trigger old field rewrite
-                mCustomTagEdit.setText("");
+
             }
         });
 
@@ -242,7 +241,6 @@ public class TagEditActivity extends DialogActivity {
         mArtistEdit.setText(mWrapper.getTag().getFirst(FieldKey.ARTIST));
         mAlbumEdit.setText(mWrapper.getTag().getFirst(FieldKey.ALBUM));
         mCustomTagSelector.setSelection(0);
-        mCustomTagEdit.setText("");
     }
 
     /**
@@ -310,6 +308,10 @@ public class TagEditActivity extends DialogActivity {
         @Override
         public void afterTextChanged(Editable s) {
             try {
+                if (s.toString().isEmpty()) {
+                    mWrapper.getTag().deleteField(key);
+                }
+
                 mWrapper.getTag().setField(key, s.toString());
             } catch (FieldDataInvalidException e) {
                 // should not happen
