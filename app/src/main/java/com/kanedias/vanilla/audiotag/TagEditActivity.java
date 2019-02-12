@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -37,6 +38,10 @@ import com.kanedias.vanilla.plugins.PluginUtils;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.id3.ID3v22Tag;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static com.kanedias.vanilla.plugins.PluginConstants.*;
@@ -85,6 +90,7 @@ public class TagEditActivity extends DialogActivity {
     private Button mConfirm, mCancel;
 
     private PluginTagWrapper mWrapper;
+    private List<FieldKey> mShownTags = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,27 +150,10 @@ public class TagEditActivity extends DialogActivity {
         mCustomTagSelector.setAdapter(hintAdapter);
         mCustomTagSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
-            private TextWatcher mCustomFieldListener;
-
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 FieldKey key = (FieldKey) mCustomTagSelector.getItemAtPosition(position);
-                if (key == null) {
-                    return;
-                }
-
-                EditText edit = (EditText) LayoutInflater.from(view.getContext())
-                        .inflate(R.layout.view_tag_field_item, mTagArea, true);
-
-                edit.setHint(key.name());
-                if (key == FieldKey.LYRICS) {
-                    edit.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-                    edit.setMaxLines(6);
-                }
-
-                edit.setText(mWrapper.getTag().getFirst(key));
-                mCustomFieldListener = new FieldKeyListener(key);
-                edit.addTextChangedListener(new FieldKeyListener(key));
+                addCustomTagField(key);
             }
 
             @Override
@@ -176,6 +165,56 @@ public class TagEditActivity extends DialogActivity {
         mTitleEdit.addTextChangedListener(new FieldKeyListener(FieldKey.TITLE));
         mArtistEdit.addTextChangedListener(new FieldKeyListener(FieldKey.ARTIST));
         mAlbumEdit.addTextChangedListener(new FieldKeyListener(FieldKey.ALBUM));
+    }
+
+    /**
+     * Add editable text area for filling custom tag field.
+     * Listener will be already attached to it.
+     *
+     * Calling this method with the key that is already present in the
+     * activity view will do nothing
+     *
+     * @param key tag key to add edit text for
+     */
+    private void addCustomTagField(@Nullable FieldKey key) {
+        if (key == null) {
+            return;
+        }
+
+        // cover art is not editable from tag editor, we have other plugins for this
+        // don't add this view
+        if (key == FieldKey.COVER_ART) {
+            return;
+        }
+
+        // check that we don't have such layout
+        if (mShownTags.contains(key)) {
+            return;
+        }
+
+        EditText edit = (EditText) LayoutInflater.from(this)
+                .inflate(R.layout.view_tag_field_item, mTagArea, false);
+
+        String name = capitalize(key.name().replace('_', ' ').toLowerCase());
+        edit.setHint(name);
+        if (key == FieldKey.LYRICS) {
+            edit.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+            edit.setSingleLine(false);
+            edit.setLines(3);
+            edit.setMaxLines(6);
+        }
+
+        edit.setText(mWrapper.getTag().getFirst(key));
+        edit.addTextChangedListener(new FieldKeyListener(key));
+
+        // 3 is just after title, artist, album
+        mTagArea.addView(edit, 3);
+    }
+
+    public static String capitalize(String input) {
+        return input != null && input.length() != 0
+                ? input.substring(0, 1).toUpperCase(Locale.ENGLISH) + input.substring(1)
+                : input;
     }
 
     /**
@@ -240,6 +279,12 @@ public class TagEditActivity extends DialogActivity {
         mTitleEdit.setText(mWrapper.getTag().getFirst(FieldKey.TITLE));
         mArtistEdit.setText(mWrapper.getTag().getFirst(FieldKey.ARTIST));
         mAlbumEdit.setText(mWrapper.getTag().getFirst(FieldKey.ALBUM));
+
+        for (FieldKey key: FieldKey.values()) {
+            if (mWrapper.getTag().hasField(key)) {
+                addCustomTagField(key);
+            }
+        }
         mCustomTagSelector.setSelection(0);
     }
 
@@ -294,6 +339,7 @@ public class TagEditActivity extends DialogActivity {
         private final FieldKey key;
 
         private FieldKeyListener(FieldKey key) {
+            mShownTags.add(key);
             this.key = key;
         }
 
