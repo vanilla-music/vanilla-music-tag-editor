@@ -8,8 +8,8 @@ android {
         applicationId "com.kanedias.vanilla.audiotag"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 18
-        versionName "1.4.1"
+        versionCode 19
+        versionName "1.4.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -49,5 +49,5 @@ play {
 dependencies {
     implementation 'com.github.vanilla-music:vanilla-music-plugin-commons:1.0.3'
     implementation 'androidx.core:core:1.0.1'
-    implementation 'com.github.Adonai:jaudiotagger:2.3.5'
+    implementation 'com.github.Adonai:jaudiotagger:2.3.6'
 }
