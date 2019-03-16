@@ -8,8 +8,8 @@ android {
         applicationId "com.kanedias.vanilla.audiotag"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 20
-        versionName "1.4.3"
+        versionCode 21
+        versionName "1.4.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
