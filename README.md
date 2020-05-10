@@ -1,27 +1,37 @@
-# Vanilla Music player Tag Editor plugin
+[![Travis (.org)](https://img.shields.io/travis/vanilla-music/vanilla-music-tag-editor)](https://travis-ci.org/github/vanilla-music/vanilla-music-tag-editor)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/vanilla-music/vanilla-music-tag-editor)](https://github.com/vanilla-music/vanilla-music-tag-editor/releases)
+[![F-Droid](https://img.shields.io/f-droid/v/com.kanedias.vanilla.audiotag)](https://f-droid.org/en/packages/com.kanedias.vanilla.audiotag/)
+[![License GPLv3+](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
+
+Vanilla Music player Tag Editor plugin
+======================================
 
 This repository hosts plugin for Vanilla Music.
 Prior to use it you should have [Vanilla Music player](https://github.com/vanilla-music/vanilla) installed
 
 Once both player and this plugin are installed, request a context menu from library screen, select "Plugins" and "Tag editor" afterwards.
 
-# Features
+Features
+--------
 
-* Tag editing of multiple audiofile formats (mp3/ogg/flac)
+* Tag editing of multiple audiofile formats (mp3/m4a/ogg/flac)
 * Custom tag editing (lyrics, track number, comment etc.)
 * Lightweight (640 KB in release apk)
 
-# Donate
+Donate
+------
 
 [<img alt="Patreon Page" src="https://s3.amazonaws.com/patreon_public_assets/toolbox/patreon.png" height="100"/>](https://www.patreon.com/kanedias)
 
-# WIP
+WIP
+---
 
 * make this plugin work with custom (non-VanillaMusic) intents
 
-# License
+License
+-------
 
-    Copyright (C) 2016-2018 Oleg "Kanedias" Chernovskiy
+    Copyright (C) 2016-2020 Oleg `Kanedias` Chernovskiy
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
