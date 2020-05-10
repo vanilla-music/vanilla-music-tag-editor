@@ -207,10 +207,10 @@ public class TagEditActivity extends DialogActivity {
 
         label.setText(capitalize(key.name().replace('_', ' ').toLowerCase()));
         edit.setText(mWrapper.getTag().getFirst(key));
-        edit.addTextChangedListener(new FieldKeyListener(key));
+        edit.addTextChangedListener(new FieldKeyListener(key, customLayout));
 
         mTagArea.addView(customLayout);
-        mParentScroll.fling(10_000);
+        customLayout.requestFocus();
     }
 
     public static String capitalize(String input) {
@@ -339,7 +339,23 @@ public class TagEditActivity extends DialogActivity {
     private final class FieldKeyListener implements TextWatcher {
 
         private final FieldKey key;
+        private View layout = null;
 
+        /**
+         * Constructor for custom fields
+         * @param key tag key this listener should track
+         * @param layout, layout that this listener should remove if tag is empty
+         */
+        private FieldKeyListener(FieldKey key, View layout) {
+            mShownTags.add(key);
+            this.key = key;
+            this.layout = layout;
+        }
+
+        /**
+         * Constructor for default fields (title, artist, etc.)
+         * @param key tag key this listener should track
+         */
         private FieldKeyListener(FieldKey key) {
             mShownTags.add(key);
             this.key = key;
@@ -358,6 +374,17 @@ public class TagEditActivity extends DialogActivity {
             try {
                 if (s.toString().isEmpty()) {
                     mWrapper.getTag().deleteField(key);
+                    if (layout != null) {
+                        // if it was custom field, remove it altogether
+                        mShownTags.remove(key);
+                        int idx = mTagArea.indexOfChild(layout);
+
+                        // there are default values at the top at all times
+                        // no need to check for idx == 0
+                        mTagArea.getChildAt(idx - 1).requestFocus();
+                        mTagArea.removeView(layout);
+                    }
+                    return;
                 }
 
                 mWrapper.getTag().setField(key, s.toString());
