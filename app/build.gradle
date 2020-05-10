@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.github.triplet.play'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
 
     defaultConfig {
         applicationId "com.kanedias.vanilla.audiotag"
         minSdkVersion 14
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode 23
         versionName "1.4.6"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -48,6 +48,6 @@ play {
 
 dependencies {
     implementation 'com.github.vanilla-music:vanilla-music-plugin-commons:1.0.3'
-    implementation 'androidx.core:core:1.1.0'
-    implementation 'com.github.Adonai:jaudiotagger:2.3.7'
+    implementation 'androidx.core:core:1.2.0'
+    implementation 'com.github.Adonai:jaudiotagger:2.3.8'
 }
