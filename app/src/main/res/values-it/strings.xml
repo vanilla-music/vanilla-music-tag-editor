@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Editor dei tag di Vanilla</string>
+    <string name="app_name">Editor dei tag</string>
     <string name="tag_editor">Editor di tag</string>
-    <string name="plugin_desc">Ti permette di modificare i tag di un file MP3/OGG/FLAC</string>
+    <string name="plugin_desc">Ti permette di modificare i tag di un file MP3/MP4/OGG/FLAC</string>
     <string name="song_title">Titolo del brano</string>
     <string name="song_artist">Artista del brano</string>
     <string name="song_album">Album del brano</string>

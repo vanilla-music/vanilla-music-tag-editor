@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Vanilla Tag-editor</string>
+    <string name="app_name">Tag-editor</string>
     <string name="tag_editor">Tag-editor</string>
     <string name="plugin_desc">Laat je ingebouwde tags bewerken van MP3-, OGG,- en FLAC-bestanden</string>
     <string name="song_title">Titel van nummer</string>

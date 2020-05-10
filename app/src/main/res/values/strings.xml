@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Vanilla Tag Editor</string>
-    <string name="tag_editor">Tag editor</string>
-    <string name="plugin_desc">Allows you to edit the embedded tags of an MP3/OGG/FLAC files</string>
+    <string name="app_name">Tag Editor</string>
+    <string name="tag_editor">Tag editor plugin</string>
+    <string name="plugin_desc">Allows you to edit the embedded tags of an MP3/MP4/OGG/FLAC files</string>
     <string name="song_title">Song title</string>
     <string name="song_artist">Song artist</string>
     <string name="song_album">Song album</string>

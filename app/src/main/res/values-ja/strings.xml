@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Vanilla Tag Editor</string>
-    <string name="tag_editor">Tag editor</string>
-    <string name="plugin_desc">MP3/OGG/FLAC ファイルの埋め込みタグを編集することができます</string>
+    <string name="app_name">Tag Editor</string>
+    <string name="tag_editor">Tag editor plugin</string>
+    <string name="plugin_desc">MP3/MP4/OGG/FLAC ファイルの埋め込みタグを編集することができます</string>
     <string name="song_title">タイトル</string>
     <string name="song_artist">アーティスト</string>
     <string name="song_album">アルバム</string>
