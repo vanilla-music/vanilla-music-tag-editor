@@ -84,9 +84,6 @@ public class TagEditActivity extends DialogActivity {
 
     private ScrollView mParentScroll;
     private LinearLayout mTagArea;
-    private EditText mTitleEdit;
-    private EditText mArtistEdit;
-    private EditText mAlbumEdit;
     private Spinner mCustomTagSelector;
     private Button mConfirm, mCancel;
 
@@ -107,9 +104,6 @@ public class TagEditActivity extends DialogActivity {
 
         mParentScroll = findViewById(R.id.parent_scroll);
         mTagArea = findViewById(R.id.tag_edit_area);
-        mTitleEdit = findViewById(R.id.song_title_edit);
-        mArtistEdit = findViewById(R.id.song_artist_edit);
-        mAlbumEdit = findViewById(R.id.song_album_edit);
         mCustomTagSelector = findViewById(R.id.song_custom_tag_selector);
         mConfirm = findViewById(R.id.confirm_tags_button);
         mCancel = findViewById(R.id.cancel_tags_button);
@@ -163,10 +157,6 @@ public class TagEditActivity extends DialogActivity {
 
             }
         });
-
-        mTitleEdit.addTextChangedListener(new FieldKeyListener(FieldKey.TITLE));
-        mArtistEdit.addTextChangedListener(new FieldKeyListener(FieldKey.ARTIST));
-        mAlbumEdit.addTextChangedListener(new FieldKeyListener(FieldKey.ALBUM));
     }
 
     /**
@@ -191,6 +181,10 @@ public class TagEditActivity extends DialogActivity {
 
         // check that we don't have such layout
         if (mShownTags.contains(key)) {
+            // we have such layout, focus on it
+            View shownLayout = mTagArea.getChildAt(mShownTags.indexOf(key));
+            EditText shownEdit = shownLayout.findViewById(R.id.song_custom_edit);
+            shownEdit.requestFocus();
             return;
         }
 
@@ -278,15 +272,17 @@ public class TagEditActivity extends DialogActivity {
      * Fills UI with initial values from loaded file.
      */
     private void fillInitialValues() {
-        mTitleEdit.setText(mWrapper.getTag().getFirst(FieldKey.TITLE));
-        mArtistEdit.setText(mWrapper.getTag().getFirst(FieldKey.ARTIST));
-        mAlbumEdit.setText(mWrapper.getTag().getFirst(FieldKey.ALBUM));
+        // predefined fields
+        addCustomTagField(FieldKey.TITLE);
+        addCustomTagField(FieldKey.ARTIST);
+        addCustomTagField(FieldKey.ALBUM);
 
         for (FieldKey key: FieldKey.values()) {
             if (mWrapper.getTag().hasField(key)) {
                 addCustomTagField(key);
             }
         }
+
         mCustomTagSelector.setSelection(0);
     }
 
@@ -379,9 +375,10 @@ public class TagEditActivity extends DialogActivity {
                         mShownTags.remove(key);
                         int idx = mTagArea.indexOfChild(layout);
 
-                        // there are default values at the top at all times
-                        // no need to check for idx == 0
-                        mTagArea.getChildAt(idx - 1).requestFocus();
+                        if (idx > 0) {
+                            // focus on previous field
+                            mTagArea.getChildAt(idx - 1).requestFocus();
+                        }
                         mTagArea.removeView(layout);
                     }
                     return;

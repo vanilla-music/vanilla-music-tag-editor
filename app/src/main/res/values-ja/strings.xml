@@ -2,9 +2,6 @@
     <string name="app_name">Tag Editor</string>
     <string name="tag_editor">Tag editor plugin</string>
     <string name="plugin_desc">MP3/MP4/OGG/FLAC ファイルの埋め込みタグを編集することができます</string>
-    <string name="song_title">タイトル</string>
-    <string name="song_artist">アーティスト</string>
-    <string name="song_album">アルバム</string>
     <string name="confirm">確認</string>
     <string name="select_custom_tag">カスタムタグを選択…</string>
     <string name="error_audio_file">オーディオファイル %s の作業中にエラーが発生しました</string>

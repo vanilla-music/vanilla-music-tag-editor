@@ -3,9 +3,6 @@
     <string name="app_name">Editor dei tag</string>
     <string name="tag_editor">Editor di tag</string>
     <string name="plugin_desc">Ti permette di modificare i tag di un file MP3/MP4/OGG/FLAC</string>
-    <string name="song_title">Titolo del brano</string>
-    <string name="song_artist">Artista del brano</string>
-    <string name="song_album">Album del brano</string>
     <string name="confirm">Conferma</string>
     <string name="select_custom_tag">Seleziona tag personalizzato…</string>
     <string name="error_audio_file">Errore con il file audio %s</string>

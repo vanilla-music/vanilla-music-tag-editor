@@ -2,9 +2,6 @@
     <string name="app_name">Címkeszerkesztő</string>
     <string name="tag_editor">Címkeszerkesztő</string>
     <string name="plugin_desc">A segítségével szerkesztheti az MP3/MP4/OGG/FLAC fájlok címkéit</string>
-    <string name="song_title">Szám címe</string>
-    <string name="song_artist">Szám előadója</string>
-    <string name="song_album">Szám albuma</string>
     <string name="confirm">Megerősítés</string>
     <string name="select_custom_tag">Válasszon egyéni címkét…</string>
     <string name="error_audio_file">Hiba a(z) %s hangfájlon végzett munka közben</string>

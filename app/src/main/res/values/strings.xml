@@ -3,9 +3,6 @@
     <string name="app_name">Tag Editor</string>
     <string name="tag_editor">Tag editor plugin</string>
     <string name="plugin_desc">Allows you to edit the embedded tags of an MP3/MP4/OGG/FLAC files</string>
-    <string name="song_title">Song title</string>
-    <string name="song_artist">Song artist</string>
-    <string name="song_album">Song album</string>
     <string name="confirm">Confirm</string>
     <string name="select_custom_tag">Select custom tag…</string>
     <string name="error_audio_file">Error while working with audio file %s</string>
