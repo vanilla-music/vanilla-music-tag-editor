@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tag Editor</string>
+    <string name="tag_editor">Tag editor plugin</string>
+    <string name="plugin_desc">Memungkinkan Anda mengedit tag tertanam dari file MP3/MP4/OGG/FLAC</string>
+    <string name="confirm">Konfirmasi</string>
+    <string name="select_custom_tag">Pilih tag kustom…</string>
+    <string name="error_audio_file">Kesalahan saat bekerja dengan file audio %s</string>
+    <string name="file_written_successfully">File berhasil ditulis!</string>
+    <string name="invalid_tag_requested">Tag yang tidak valid diminta</string>
+    <string name="invalid_artwork_provided">Artwork yang diberikan tidak valid</string>
+    <string name="re_tag">Beri tag ulang</string>
+    <string name="id3_v22_to_v24">Apakah Anda ingin memberi tag ulang ID3 v2.2 untuk v2.4 dalam file ini untuk kompatibilitas yang lebih baik?</string>
+    <string name="reload">Muat ulang</string>
+    <string name="not_supported_use_other_plugin">Tidak dapat menulis data teks ke tag tersebut, coba gunakan plugin lain</string>
+</resources>
